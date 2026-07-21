@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="FsAssay.Analyzers/FsAssay.Analyzers.fsproj" />
+  <Project Path="FsAssay.Runner/FsAssay.Runner.fsproj" />
   <Project Path="FsAssay.Tests/FsAssay.Tests.fsproj" />
 </Solution>
