@@ -114,6 +114,28 @@ let doSomething () =
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA1007" results
+
+        testCase "FSA1008: OOP Inheritance" <| fun _ ->
+            let sourceCode = """
+module BadCode
+type IAnimal =
+    abstract member Speak: unit -> string
+type Dog() =
+    interface IAnimal with
+        member this.Speak() = "Woof"
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA1008" results
+
+        testCase "FSA1009: Mutable Collections" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething () =
+    let list = ResizeArray<int>()
+    list.Add(5)
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA1009" results
     ]
 
 [<EntryPoint>]

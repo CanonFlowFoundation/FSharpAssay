@@ -20,6 +20,8 @@ The following rules have been implemented and fully tested in the v0.1 engine:
 | **FSA1005** | **Boolean Validation** | Naming functions `isValidX` that return `bool`. | Return `Result<ParsedType, Error>` (Parse, Don't Validate). |
 | **FSA1006** | **Generic Catch** | Using `try/with` to catch `System.Exception` generically for flow control. | Use `Result` returning functions instead of exceptions. |
 | **FSA1007** | **Imperative Loops** | Using `while` loops for aggregations. | Use `Seq.fold`, `Seq.map`, or recursion. |
+| **FSA1008** | **OOP Inheritance** | Using `inherit`, `abstract`, or `interface`. | Compose functions or use Discriminated Unions. |
+| **FSA1009** | **Mutable Collections** | Using `ResizeArray` or `System.Collections.Generic.List`. | Use F# immutable `list`, `array`, or `Map`. |
 
 ## 🛠 Building & Testing Locally
 
