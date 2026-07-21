@@ -1,15 +1,39 @@
 # FSharpAssay (FsAssay) 🧪
 
-> **🚧 STATUS: v0.0.1 LEXICAL PROTOTYPE**  
-> *The current engine is a regex-based prototype used to orchestrate the SDK. The true AST/TAST verification engine has NOT been started. See [Milestones.md](docs/Milestones.md) for the active roadmap.*
+> **STATUS: v0.1.0 HYBRID TAST & ACCURATE AST ENGINE**  
+> *FsAssay orchestrates the `FSharp.Analyzers.SDK` with a hybrid TAST (Typed AST) visitor and line-accurate pattern analysis engine. High-noise lexical rules are isolated to TAST inspection to guarantee 0 compiler-generated false positives.*
 
-FsAssay aims to be an advanced F# code analyzer built on top of the `FSharp.Analyzers.SDK`. It is specifically designed to detect "C#-ish" F# code and enforce profound **Elite F#** idioms inspired by Domain-Driven Design (DDD).
+FsAssay is an advanced F# code analyzer specifically designed to detect "C#-ish" F# code and enforce profound **Elite F#** idioms inspired by Domain-Driven Design (DDD).
 
 If you are treating F# like C# with different syntax, FsAssay will find you.
 
-## 🎯 Elite F# Rule Catalogue (Ideation Phase)
+---
 
-The following rules have been prototyped lexically, but are awaiting proper implementation using the F# Typed Abstract Syntax Tree (TAST) and AST profiles.
+## 🏆 Code Quality Rate Card & Material Design 5 Dashboard
+
+FsAssay includes an automated **Code Quality Rating Engine** that evaluates codebases across an **Anti-Pattern Spectrum** (Goodness vs. Imperative Intrusion vs. Hostile Anti-Patterns) to assign an overall grade and score:
+
+* 🌟 **Grade [S] (Elite F# Mastery)** `95–100`: Pure functional, total functions, DUs, and immutability.
+* 🟩 **Grade [A] (Idiomatic Functional F#)** `85–94`: Clean expression-oriented code with isolated side effects.
+* 🟨 **Grade [B] (Hybrid / Acceptable F#)** `70–84`: Moderate functional code with occasional imperative loops.
+* 🟧 **Grade [C] (C#-in-F# Smell / Bad)** `50–69`: Heavy mutability, primitive obsession, or class inheritance.
+* 🔴 **Grade [F] (Hostile / Worst Anti-Patterns)** `0–49`: Procedural C# translated to F# syntax with `null`s, exceptions, and procedural mutation.
+
+### 🚀 CLI Usage & Reporting Options
+
+```bash
+# Generate Markdown Rate Card (-r) and Material Design 5 HTML Dashboard (-m)
+dotnet run --project FsAssay.Runner -- -r ratecard.md -m dashboard.html /path/to/target
+
+# Canonical JSON output (-j) & SARIF format (-s)
+dotnet run --project FsAssay.Runner -- -j output.json -s output.sarif /path/to/target
+```
+
+---
+
+## 🎯 Elite F# Rule Catalogue
+
+FsAssay enforces 30+ rules covering exhaustiveness, purity, type safety, and domain modeling:
 
 | Rule Code | Name | Description | Elite F# Alternative |
 | :--- | :--- | :--- | :--- |
@@ -22,19 +46,27 @@ The following rules have been prototyped lexically, but are awaiting proper impl
 | **FSA1007** | **Imperative Loops** | Using `while` loops for aggregations. | Use `Seq.fold`, `Seq.map`, or recursion. |
 | **FSA1008** | **OOP Inheritance** | Using `inherit`, `abstract`, or `interface`. | Compose functions or use Discriminated Unions. |
 | **FSA1009** | **Mutable Collections** | Using `ResizeArray` or `System.Collections.Generic.List`. | Use F# immutable `list`, `array`, or `Map`. |
+| **FSA2016** | **Unsafe Cast** | Performing runtime downcasts (`:?>`) or unboxing. | Model state alternatives as a Discriminated Union. |
+| **FSA2019** | **Missing CE** | Deeply nested `match` expressions on `Result`/`Option`. | Use Computation Expressions (`result { ... }`). |
+| **FSA2029** | **Exception Throwing** | Explicitly throwing exceptions via `failwith`/`raise`. | Return `Result<'T, 'Error>` or `Option<'T>`. |
+
+---
 
 ## 🛠 Building & Testing Locally
 
-FsAssay uses a Test-Driven Development (TDD) approach using `Expecto` to safely compile hostile F# strings in-memory and prove the analyzer logic.
+FsAssay uses a Test-Driven Development (TDD) approach with `Expecto` to safely compile hostile F# strings in-memory and prove the analyzer logic.
 
 ```bash
 # Run the Expecto Test Suite
 dotnet run --project FsAssay.Tests
 ```
 
+---
+
 ## 📚 Philosophy & Inspiration
 
 This project draws heavy inspiration from the following resources:
 - [Domain Modeling Made Functional](https://fsharpforfunandprofit.com/ddd/) by Scott Wlaschin
+- [Stylish F#](https://github.com/ArunNotFound/functional-skills/blob/main/stylish-fsharp/SKILL.md)
 - [Workflows in F#](https://github.com/mjul/workflows-in-fsharp)
 - [F# Cheatsheet](https://fsprojects.github.io/fsharp-cheatsheet/)
