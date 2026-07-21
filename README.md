@@ -1,7 +1,7 @@
 # FSharpAssay (FsAssay) 🧪
 
 > **🚧 STATUS: WORK IN PROGRESS (WIP)**  
-> *Currently in v0.1: Engine Foundation and Core Anti-Pattern Implementation. See [Milestones.md](Milestones.md) for the active roadmap.*
+> *Currently in v0.1: Engine Foundation and Core Anti-Pattern Implementation. See [Milestones.md](docs/Milestones.md) for the active roadmap.*
 
 FsAssay is an advanced F# code analyzer built on top of the `FSharp.Analyzers.SDK`. It is specifically designed to detect "C#-ish" F# code and enforce profound **Elite F#** idioms inspired by Domain-Driven Design (DDD), such as "Make Illegal States Unrepresentable" and "Parse, Don't Validate".
 
