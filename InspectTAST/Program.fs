@@ -7,7 +7,7 @@ open FSharp.Compiler.Symbols
 [<EntryPoint>]
 let main argv =
     let checker = FSharpChecker.Create(keepAssemblyContents = true)
-    let file = Path.Combine(Directory.GetCurrentDirectory(), "dummy.fs")
+    let file = Path.Combine(Directory.GetCurrentDirectory(), "dummy.fsx")
     let source = """
 module Dummy
 open System
@@ -22,7 +22,7 @@ let doSomething () =
 """
     let sourceText = SourceText.ofString source
     let options, _ = checker.GetProjectOptionsFromScript(file, sourceText) |> Async.RunSynchronously
-    let parse, check = checker.ParseAndCheckFileInProject(file, 0, sourceText, options) |> Async.RunSynchronously
+    let parse, check = checker.ParseAndCheckFileInProject(file, 1, sourceText, options) |> Async.RunSynchronously
     match check with
     | FSharpCheckFileAnswer.Succeeded(res) ->
         let rec visitExpr (expr: FSharpExpr) =

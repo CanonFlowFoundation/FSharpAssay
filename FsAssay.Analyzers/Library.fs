@@ -73,10 +73,14 @@ module Rules =
                             visitExpr valExpr localSups
                             visitExpr body localSups
                         | FSharpExprPatterns.DefaultValue(_) ->
-                            addViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups
+                            let text = ctx.SourceText.GetSubTextFromRange(expr.Range).ToString()
+                            if text.Contains("null") || text.Contains("defaultof") then
+                                addViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups
                         | FSharpExprPatterns.Const(obj, ty) ->
                             if isNull obj && not (ty.HasTypeDefinition && ty.TypeDefinition.LogicalName = "unit") then
-                                addViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups
+                                let text = ctx.SourceText.GetSubTextFromRange(expr.Range).ToString()
+                                if text.Contains("null") then
+                                    addViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups
                         | FSharpExprPatterns.ValueSet(v, valExpr) ->
                             addViolation "FSA1001" "Mutation Overuse: Avoid mutation. Use record copies with 'with' instead." expr.Range sups
                             visitExpr valExpr sups
