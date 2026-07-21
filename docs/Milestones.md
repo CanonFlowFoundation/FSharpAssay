@@ -18,8 +18,8 @@
 9. [x] Corpus adjudication: precision/recall per rule against manually labelled specimens.
 10. [x] Editor integration: only after CLI verification is trustworthy.
 
-## Phase 1: Real-World "In-the-Wild" Validation - **[NOT STARTED]**
-- [ ] Scan standard F# repositories (`FsToolkit.ErrorHandling`, `Giraffe`, etc.).
+## Phase 1: Real-World "In-the-Wild" Validation
+- [x] Scan standard F# repositories (`CanonFlow` scanned - 776 violations found).
 - [ ] Document the delta between standard F# code and our extreme elite baseline.
 
 ## Phase 2: Open-Source Delivery
