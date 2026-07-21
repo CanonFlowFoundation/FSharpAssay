@@ -11,6 +11,7 @@ To further validate `FsAssay` in the wild, we scanned several major F# repositor
 7. `ronnieholm/FSharp-onion-architecture-sample`
 8. `fsprojects/FSharp.ViewModule`
 9. `akkadotnet/akka.net`
+10. `MassTransit/MassTransit`
 
 ## Rules Engine Upgrade
 
@@ -73,6 +74,9 @@ Akka.NET is a direct port of the Scala/Java Actor framework, relying extensively
 * **FSA1008 (OOP Inheritance)** for almost every Actor abstraction.
 * **FSA1001 (Mutation Overuse)** in the core `FsApi.fs`.
 * **FSA1004 (Primitive Obsession)** inside `Akka.Persistence.FSharp`.
+
+### 10. `MassTransit/MassTransit`
+MassTransit is a massive C# enterprise message bus. While it has some F# extension points or examples, the scanner found **zero F# violations**. The F# components are either minimal or correctly written.
 
 ## Conclusion
 The `FsAssay` rules engine is now highly mature. It not only prevents basic bad habits but actively guards the functional paradigm from being diluted by OOP translation layers and C#-isms across every major community repo we tested.

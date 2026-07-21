@@ -9,3 +9,4 @@ repositories:
   - url: "https://github.com/ronnieholm/FSharp-onion-architecture-sample"
   - url: "https://github.com/fsprojects/FSharp.ViewModule"
   - url: "https://github.com/akkadotnet/akka.net"
+  - url: "https://github.com/MassTransit/MassTransit"
