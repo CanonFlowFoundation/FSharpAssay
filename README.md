@@ -1,15 +1,15 @@
 # FSharpAssay (FsAssay) 🧪
 
-> **🚧 STATUS: WORK IN PROGRESS (WIP)**  
-> *Currently in v0.1: Engine Foundation and Core Anti-Pattern Implementation. See [Milestones.md](docs/Milestones.md) for the active roadmap.*
+> **🚧 STATUS: v0.0.1 LEXICAL PROTOTYPE**  
+> *The current engine is a regex-based prototype used to orchestrate the SDK. The true AST/TAST verification engine has NOT been started. See [Milestones.md](docs/Milestones.md) for the active roadmap.*
 
-FsAssay is an advanced F# code analyzer built on top of the `FSharp.Analyzers.SDK`. It is specifically designed to detect "C#-ish" F# code and enforce profound **Elite F#** idioms inspired by Domain-Driven Design (DDD), such as "Make Illegal States Unrepresentable" and "Parse, Don't Validate".
+FsAssay aims to be an advanced F# code analyzer built on top of the `FSharp.Analyzers.SDK`. It is specifically designed to detect "C#-ish" F# code and enforce profound **Elite F#** idioms inspired by Domain-Driven Design (DDD).
 
 If you are treating F# like C# with different syntax, FsAssay will find you.
 
-## 🎯 Elite F# Rule Set
+## 🎯 Elite F# Rule Catalogue (Ideation Phase)
 
-The following rules have been implemented and fully tested in the v0.1 engine:
+The following rules have been prototyped lexically, but are awaiting proper implementation using the F# Typed Abstract Syntax Tree (TAST) and AST profiles.
 
 | Rule Code | Name | Description | Elite F# Alternative |
 | :--- | :--- | :--- | :--- |

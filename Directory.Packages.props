@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="FSharp.Core" Version="10.1.201" />
+    <PackageVersion Include="FSharp.Compiler.Service" Version="43.12.201" />
+    <PackageVersion Include="FSharp.Analyzers.SDK" Version="0.37.2" />
+    <PackageVersion Include="Expecto" Version="11.1.0" />
+  </ItemGroup>
+</Project>

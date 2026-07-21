@@ -12,7 +12,7 @@ module Rules =
             Message = msg
             Code = code
             Severity = Severity.Error
-            Range = Range.Zero
+            Range = Range.range0
             Fixes = []
         }
 
