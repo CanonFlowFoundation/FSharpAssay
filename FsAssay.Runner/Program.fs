@@ -10,6 +10,8 @@ type Arguments =
     | [<AltCommandLine("-j")>] Out_Json of path:string
     | [<AltCommandLine("-s")>] Out_Sarif of path:string
     | [<AltCommandLine("-t")>] Out_Toolchain of path:string
+    | [<AltCommandLine("-r")>] RateCard_Md of path:string
+    | [<AltCommandLine("-m")>] Material_Html of path:string
     | [<AltCommandLine("-a")>] Adjudicate
     with
         interface IArgParserTemplate with
@@ -19,6 +21,8 @@ type Arguments =
                 | Out_Json _ -> "Output file path for canonical JSON."
                 | Out_Sarif _ -> "Output file path for SARIF."
                 | Out_Toolchain _ -> "Output file path for toolchain record."
+                | RateCard_Md _ -> "Output file path for Markdown Code Quality Rate Card."
+                | Material_Html _ -> "Output file path for Material Design 5 HTML Dashboard."
                 | Adjudicate -> "Run in adjudication mode (evaluate Precision/Recall against // EXPECT comments)."
 
 [<EntryPoint>]
@@ -137,10 +141,20 @@ let main argv =
             printfn "Wrote toolchain record to %s" outPath
         | None -> ()
 
+        match results.TryGetResult(RateCard_Md) with
+        | Some outPath ->
+            Output.writeRateCardMarkdown (List.ofSeq allResults) totalFiles outPath
+            printfn "Wrote Markdown Rate Card to %s" outPath
+        | None -> ()
+
+        match results.TryGetResult(Material_Html) with
+        | Some outPath ->
+            Output.writeMaterialHtmlDashboard (List.ofSeq allResults) totalFiles outPath
+            printfn "Wrote Material Design 5 HTML Dashboard to %s" outPath
+        | None -> ()
+
         if failedFiles > 0 then ExitCodes.ToolFailure
         elif skippedFiles > 0 then ExitCodes.RequiredEvidenceMissing
         elif results.Contains(Adjudicate) then ExitCodes.Success
         elif totalViolations > 0 then ExitCodes.BlockingFinding
         else ExitCodes.Success
-
-
