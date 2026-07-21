@@ -16,13 +16,14 @@
 7. [x] Evidence: canonical JSON, SARIF and toolchain record.
 8. [x] Profiles and suppression: core, shell, interop; visible authorization.
 9. [x] Corpus adjudication: precision/recall per rule against manually labelled specimens.
-10. [ ] Editor integration: only after CLI verification is trustworthy.
+10. [x] Editor integration: only after CLI verification is trustworthy.
 
 ## Phase 1: Real-World "In-the-Wild" Validation - **[NOT STARTED]**
-- [ ] Run `fs-assay` against a large codebase corpus to discover hidden C#-isms using proper TAST symbols.
-- [ ] Document real-world false positives and refine the analyzer.
+- [ ] Scan standard F# repositories (`FsToolkit.ErrorHandling`, `Giraffe`, etc.).
+- [ ] Document the delta between standard F# code and our extreme elite baseline.
 
-## Phase 2: Distribution & IDE Integration - **[NOT STARTED]**
-- [ ] Package `FsAssay.Analyzers` as a publishable NuGet package.
-- [ ] Configure GitHub Actions for continuous integration (CI/CD).
-- [ ] Document integration steps for Ionide (VS Code) and Rider to provide live squiggly lines in the developer's editor.
+## Phase 2: Open-Source Delivery
+- [ ] Release as standalone tool (`dotnet tool install -g fsassay`).
+- [x] Implement `Argu` for robust command-line invocation (`fsassay --target ./src --out result.json`).
+- [x] Integrate standard `.editorconfig`.
+- [x] Document integration steps for Ionide (VS Code) and Rider to provide live squiggly lines in the developer's editor.
