@@ -23,7 +23,7 @@
 - [x] Document the delta between standard F# code and our extreme elite baseline.
 
 ## Phase 2: Open-Source Delivery
-- [ ] Release as standalone tool (`dotnet tool install -g fsassay`).
+- [x] Release as standalone tool (`dotnet tool install -g fsassay`).
 - [x] Implement `Argu` for robust command-line invocation (`fsassay --target ./src --out result.json`).
 - [x] Integrate standard `.editorconfig`.
 - [x] Document integration steps for Ionide (VS Code) and Rider to provide live squiggly lines in the developer's editor.
