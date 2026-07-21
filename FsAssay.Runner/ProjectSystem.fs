@@ -25,8 +25,9 @@ module ProjectSystem =
         |> Seq.toList
 
     let getTargetProjects (path: string) =
-        if path.EndsWith(".sln") then loadSolution path
+        if path.EndsWith(".sln") || path.EndsWith(".slnx") then loadSolution path
         elif path.EndsWith(".fsproj") then loadProjects [path]
+        elif File.Exists(path) then []
         else 
             let projs = Directory.GetFiles(path, "*.fsproj", SearchOption.AllDirectories)
             if projs.Length = 0 then []

@@ -101,125 +101,41 @@ module Rules =
                             visitExpr expr sups
 
                     ctx.TypedTree.Value.Declarations |> List.iter (fun d -> visitDecl d [])
+
+                // Helper for generating precise line-range violations for remaining valid regex checks
+                let checkRegex code msg pattern (opts: RegexOptions) =
+                    for m in Regex.Matches(source, pattern, opts) do
+                        let line = source.Substring(0, m.Index).Split('\n').Length
+                        let r = Range.mkRange ctx.FileName (Position.mkPos line 0) (Position.mkPos line 0)
+                        violations <- createViolation code msg r :: violations
+
+                // Lexical rules with precise line ranges & fixed regexes
+                checkRegex "FSA1004" "Primitive Obsession: Do not use type aliases for primitives. Use Single-Case Discriminated Unions to make illegal states unrepresentable." @"type\s+[A-Za-z0-9_]+\s*=\s*(string|int|float|bool|decimal|DateTime)\b" RegexOptions.None
+                checkRegex "FSA1005" "Parse, Don't Validate: Functions should return Result<ParsedType, Error> rather than a boolean validity flag." @"let\s+is[A-Z][a-zA-Z0-9_]*\b|isValid" RegexOptions.None
+                checkRegex "FSA1006" "Generic Catch: Do not catch generic exceptions for flow control. Use Result types instead." @"\:\? Exception|catch \(Exception|\:\? System\.Exception" RegexOptions.None
+                checkRegex "FSA1007" "Imperative Loops: Avoid 'while' loops. Use Seq.fold or recursion." @"\bwhile\b" RegexOptions.None
+                checkRegex "FSA1008" "OOP Inheritance: Avoid OOP inheritance and interfaces. Use records of functions or Discriminated Unions." @"\binherit\b|\babstract\s+member\b|\binterface\b.*with" RegexOptions.None
+                checkRegex "FSA1009" "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list." @"\bResizeArray\b|System\.Collections\.Generic\.List|System\.Collections\.Generic\.Dictionary" RegexOptions.None
+                checkRegex "FSA2008" "Enum Instead of DU: C#-style enum detected. Replace with a Discriminated Union." @"type\s+[A-Za-z0-9_]+\s*=\s*\|\s*[A-Za-z0-9_]+\s*=\s*\d+" RegexOptions.None
+                checkRegex "FSA2012" "Mutable Collection Intrusion: BCL mutable collection detected in domain logic." @"\bHashSet\b|System\.Collections\.Generic\.HashSet" RegexOptions.None
+                checkRegex "FSA2014" "Imperative Accumulation: Mutable accumulator with loop detected." @"let\s+mutable.*\n*.*(while|for)" RegexOptions.None
                 
-                // Keep regex for the rest
-                // FSA1004: Primitive Obsession
-                if Regex.IsMatch(source, @"type\s+[A-Za-z0-9_]+\s*=\s*(string|int|float|bool|decimal|DateTime)\b") then
-                    violations <- createViolation "FSA1004" "Primitive Obsession: Do not use type aliases for primitives. Use Single-Case Discriminated Unions to make illegal states unrepresentable." Range.range0 :: violations
-
-                // FSA1005: Boolean Validation
-                if Regex.IsMatch(source, @"let\s+is[A-Z][a-zA-Z0-9_]*\b") || source.Contains("isValid") then
-                    violations <- createViolation "FSA1005" "Parse, Don't Validate: Functions should return Result<ParsedType, Error> rather than a boolean validity flag." Range.range0 :: violations
-
-                // FSA1006: Generic Catch
-                if source.Contains(":? Exception") || source.Contains("catch (Exception") || source.Contains(":? System.Exception") then
-                    violations <- createViolation "FSA1006" "Generic Catch: Do not catch generic exceptions for flow control. Use Result types instead." Range.range0 :: violations
-
-                // FSA1007: Imperative Loops
-                if Regex.IsMatch(source, @"\bwhile\b") then
-                    violations <- createViolation "FSA1007" "Imperative Loops: Avoid 'while' loops. Use Seq.fold or recursion." Range.range0 :: violations
-
-                // FSA1008: OOP Inheritance
-                if Regex.IsMatch(source, @"\binherit\b") || Regex.IsMatch(source, @"\babstract\s+member\b") || Regex.IsMatch(source, @"\binterface\b.*with") then
-                    violations <- createViolation "FSA1008" "OOP Inheritance: Avoid OOP inheritance and interfaces. Use records of functions or Discriminated Unions." Range.range0 :: violations
-
-                // FSA1009: Mutable Collections
-                if Regex.IsMatch(source, @"\bResizeArray\b") || source.Contains("System.Collections.Generic.List") || source.Contains("System.Collections.Generic.Dictionary") then
-                    violations <- createViolation "FSA1009" "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list." Range.range0 :: violations
-
-                // FSA2008: Enum Instead of DU
-                if Regex.IsMatch(source, @"type\s+[A-Za-z0-9_]+\s*=\s*\|\s*[A-Za-z0-9_]+\s*=\s*\d+") then
-                    violations <- createViolation "FSA2008" "Enum Instead of DU: C#-style enum detected. Replace with a Discriminated Union." Range.range0 :: violations
-
-                // FSA2009: Exhaustiveness Evasion
-                if Regex.IsMatch(source, @"\|\s*_\s*->") then
-                    violations <- createViolation "FSA2009" "Exhaustiveness Evasion: Wildcard '_' pattern detected on a DU match. Enumerate all cases." Range.range0 :: violations
-
-                // FSA2010: Object Erasure
-                if Regex.IsMatch(source, @"\bobj\b|System\.Object\b") then
-                    violations <- createViolation "FSA2010" "Object Erasure: 'obj' or 'System.Object' used where a Discriminated Union or generic would preserve type safety." Range.range0 :: violations
-
-                // FSA2011: Conditional Dispatch on Sum Types
-                if Regex.IsMatch(source, @"\bif\b.*match\b|\.Is[A-Z][a-zA-Z0-9_]*") then
-                    violations <- createViolation "FSA2011" "Conditional Dispatch on Sum Types: If/elif chain dispatching on identity detected." Range.range0 :: violations
-
-                // FSA2012: Mutable Collection Intrusion
-                if Regex.IsMatch(source, @"\bHashSet\b|System\.Collections\.Generic\.HashSet") then
-                    violations <- createViolation "FSA2012" "Mutable Collection Intrusion: BCL mutable collection detected in domain logic." Range.range0 :: violations
-
-                // FSA2013: Destructive Collection Mutation
-                if Regex.IsMatch(source, @"\.(Add|Remove|Clear)\(|\.[A-Za-z0-9_]+\s*<-") then
-                    violations <- createViolation "FSA2013" "Destructive Collection Mutation: In-place collection mutation detected." Range.range0 :: violations
-
-                // FSA2014: Imperative Accumulation
-                if Regex.IsMatch(source, @"let\s+mutable.*\n*.*(while|for)") then
-                    violations <- createViolation "FSA2014" "Imperative Accumulation: Mutable accumulator with loop detected." Range.range0 :: violations
-
-                // FSA2015: Redundant Type Annotation
-                if Regex.IsMatch(source, @"let\s+[a-zA-Z0-9_]+\s*:\s*[a-zA-Z0-9_]+\s*=") then
-                    violations <- createViolation "FSA2015" "Redundant Type Annotation: Type annotation matches inferred type." Range.range0 :: violations
-
-                // FSA2016: Unsafe Cast
-                if Regex.IsMatch(source, @"(:?>|:>|\bbox\b|\bunbox\b)") then
-                    violations <- createViolation "FSA2016" "Unsafe Cast: Runtime cast detected. Model alternatives as a DU." Range.range0 :: violations
-
-                // FSA2017: Reflection-Based Dispatch
-                if Regex.IsMatch(source, @"(typeof<|\.GetType\(\)|Activator\.CreateInstance|System\.Reflection)") then
-                    violations <- createViolation "FSA2017" "Reflection-Based Dispatch: Runtime type inspection used for dispatch." Range.range0 :: violations
-
-                // FSA2018: Inheritance Depth / Interface Obsession
-                if Regex.IsMatch(source, @"(\boverride\b|\bvirtual\b)") then
-                    violations <- createViolation "FSA2018" "Inheritance Depth: override or virtual detected. Use composition." Range.range0 :: violations
-
-                // Features from Gpt2.md
-                // FSA2019: Missing Computation Expression (Nested Match)
-                if Regex.IsMatch(source, @"match.*with\s*\|\s*(Some|Ok).*->\s*match", RegexOptions.Singleline) then
-                    violations <- createViolation "FSA2019" "Missing Computation Expression: Nested Result/Option matching detected. Use a Computation Expression." Range.range0 :: violations
-
-                // FSA2020: Signature Blindness
-                if Regex.IsMatch(source, @"\([A-Za-z0-9_]+\s*:\s*(int|string|float|decimal|bool)\)\s*\([A-Za-z0-9_]+\s*:\s*\1\)") then
-                    violations <- createViolation "FSA2020" "Signature Blindness: Consecutive primitive arguments of the same type detected." Range.range0 :: violations
-
-                // FSA2021: Flag-Based State Machine
-                if Regex.IsMatch(source, @"(Is[A-Z][a-zA-Z0-9_]*\s*:\s*bool).*?(Is[A-Z][a-zA-Z0-9_]*\s*:\s*bool)", RegexOptions.Singleline) then
-                    violations <- createViolation "FSA2021" "Flag-Based State Machine: Multiple boolean flags detected in a type. Use a DU." Range.range0 :: violations
-
-                // FSA2022: Impure Core
-                if Regex.IsMatch(source, @"\bSystem\.IO\.File\b|\bHttpClient\b|\bConsole\.Write") then
-                    violations <- createViolation "FSA2022" "Impure Core: I/O side effects detected without explicit functional boundaries." Range.range0 :: violations
-
-                // FSA2023: Nested Function Application
-                if Regex.IsMatch(source, @"\b[A-Za-z0-9_]+\s*\(\s*[A-Za-z0-9_]+\s*\(") then
-                    violations <- createViolation "FSA2023" "Nested Function Application: Deep nesting detected. Consider using the |> operator." Range.range0 :: violations
-
-                // FSA2024: Missed Active Pattern
-                if Regex.IsMatch(source, @"\bif\b.*\belif\b.*\belif\b", RegexOptions.Singleline) then
-                    violations <- createViolation "FSA2024" "Missed Active Pattern: Complex if/elif chains detected. Consider an Active Pattern." Range.range0 :: violations
-
-                // FSA2025: Boolean Parameter Blindness
-                if Regex.IsMatch(source, @"let\s+[A-Za-z0-9_]+\s+(true|false)\s+(true|false)") || Regex.IsMatch(source, @"\bbool\b\s*->\s*\bbool\b\s*->") then
-                    violations <- createViolation "FSA2025" "Boolean Parameter Blindness: Consecutive boolean parameters/types detected." Range.range0 :: violations
-
-                // FSA2026: Option Constellation
-                if Regex.IsMatch(source, @"[A-Za-z0-9_]+\s*option.*?[A-Za-z0-9_]+\s*option.*?[A-Za-z0-9_]+\s*option", RegexOptions.Singleline) then
-                    violations <- createViolation "FSA2026" "Option Constellation: Multiple optional fields detected. Represent states with a DU." Range.range0 :: violations
-
-                // FSA2027: Stringly Error Channel
-                if Regex.IsMatch(source, @"Result<[^,]+,\s*string>") then
-                    violations <- createViolation "FSA2027" "Stringly Error Channel: Result returning a primitive string error. Use a domain error DU." Range.range0 :: violations
-
-                // Features from Gptqwen1.md
-                // FSA2028: Static Class as Module
-                if Regex.IsMatch(source, @"\[<AbstractClass[^>]*Sealed[^>]*>\]\s*type") then
-                    violations <- createViolation "FSA2028" "Static Class as Module: C#-style static class detected. Use an F# module." Range.range0 :: violations
-
-                // FSA2029: Exception Throwing in Domain
-                if Regex.IsMatch(source, @"\bfailwith\b|\bfailwithf\b|\braise\b|\binvalidArg\b") then
-                    violations <- createViolation "FSA2029" "Exception Throwing: Explicit exception throwing detected. Return Result or Option instead." Range.range0 :: violations
-
-                // FSA2030: Manual Dispose
-                if Regex.IsMatch(source, @"\b[A-Za-z0-9_]+\.Dispose\(\)") then
-                    violations <- createViolation "FSA2030" "Manual Dispose: Explicit .Dispose() call detected. Use the 'use' keyword instead." Range.range0 :: violations
+                // Fixed FSA2016 (escaped :\?> instead of unescaped :?>)
+                checkRegex "FSA2016" "Unsafe Cast: Runtime cast detected. Model alternatives as a DU." @"(:\?>|\bbox\b|\bunbox\b)" RegexOptions.None
+                
+                checkRegex "FSA2017" "Reflection-Based Dispatch: Runtime type inspection used for dispatch." @"(typeof<|\.GetType\(\)|Activator\.CreateInstance|System\.Reflection)" RegexOptions.None
+                checkRegex "FSA2018" "Inheritance Depth: override or virtual detected. Use composition." @"(\boverride\b|\bvirtual\b)" RegexOptions.None
+                checkRegex "FSA2019" "Missing Computation Expression: Nested Result/Option matching detected. Use a Computation Expression." @"match.*with\s*\|\s*(Some|Ok).*->\s*match" RegexOptions.Singleline
+                checkRegex "FSA2020" "Signature Blindness: Consecutive primitive arguments of the same type detected." @"\([A-Za-z0-9_]+\s*:\s*(int|string|float|decimal|bool)\)\s*\([A-Za-z0-9_]+\s*:\s*\1\)" RegexOptions.None
+                checkRegex "FSA2021" "Flag-Based State Machine: Multiple boolean flags detected in a type. Use a DU." @"(Is[A-Z][a-zA-Z0-9_]*\s*:\s*bool).*?(Is[A-Z][a-zA-Z0-9_]*\s*:\s*bool)" RegexOptions.Singleline
+                checkRegex "FSA2022" "Impure Core: I/O side effects detected without explicit functional boundaries." @"\bSystem\.IO\.File\b|\bHttpClient\b|\bConsole\.Write" RegexOptions.None
+                checkRegex "FSA2023" "Nested Function Application: Deep nesting detected. Consider using the |> operator." @"\b[A-Za-z0-9_]+\s*\(\s*[A-Za-z0-9_]+\s*\(" RegexOptions.None
+                checkRegex "FSA2024" "Missed Active Pattern: Complex if/elif chains detected. Consider an Active Pattern." @"\bif\b.*\belif\b.*\belif\b" RegexOptions.Singleline
+                checkRegex "FSA2025" "Boolean Parameter Blindness: Consecutive boolean parameters/types detected." @"let\s+[A-Za-z0-9_]+\s+(true|false)\s+(true|false)|\bbool\b\s*->\s*\bbool\b\s*->" RegexOptions.None
+                checkRegex "FSA2026" "Option Constellation: Multiple optional fields detected. Represent states with a DU." @"[A-Za-z0-9_]+\s*option.*?[A-Za-z0-9_]+\s*option.*?[A-Za-z0-9_]+\s*option" RegexOptions.Singleline
+                checkRegex "FSA2027" "Stringly Error Channel: Result returning a primitive string error. Use a domain error DU." @"Result<[^,]+,\s*string>" RegexOptions.None
+                checkRegex "FSA2028" "Static Class as Module: C#-style static class detected. Use an F# module." @"\[<AbstractClass[^>]*Sealed[^>]*>\]\s*type" RegexOptions.None
+                checkRegex "FSA2030" "Manual Dispose: Explicit .Dispose() call detected. Use the 'use' keyword instead." @"\b[A-Za-z0-9_]+\.Dispose\(\)" RegexOptions.None
 
                 return violations |> List.rev
             }

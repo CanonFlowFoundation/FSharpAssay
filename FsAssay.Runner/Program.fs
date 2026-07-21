@@ -138,6 +138,7 @@ let main argv =
         | None -> ()
 
         if failedFiles > 0 then ExitCodes.ToolFailure
+        elif skippedFiles > 0 then ExitCodes.RequiredEvidenceMissing
         elif results.Contains(Adjudicate) then ExitCodes.Success
         elif totalViolations > 0 then ExitCodes.BlockingFinding
         else ExitCodes.Success
