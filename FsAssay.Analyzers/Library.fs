@@ -208,5 +208,18 @@ module Rules =
                 if Regex.IsMatch(source, @"Result<[^,]+,\s*string>") then
                     violations <- createViolation "FSA2027" "Stringly Error Channel: Result returning a primitive string error. Use a domain error DU." Range.range0 :: violations
 
+                // Features from Gptqwen1.md
+                // FSA2028: Static Class as Module
+                if Regex.IsMatch(source, @"\[<AbstractClass[^>]*Sealed[^>]*>\]\s*type") then
+                    violations <- createViolation "FSA2028" "Static Class as Module: C#-style static class detected. Use an F# module." Range.range0 :: violations
+
+                // FSA2029: Exception Throwing in Domain
+                if Regex.IsMatch(source, @"\bfailwith\b|\bfailwithf\b|\braise\b|\binvalidArg\b") then
+                    violations <- createViolation "FSA2029" "Exception Throwing: Explicit exception throwing detected. Return Result or Option instead." Range.range0 :: violations
+
+                // FSA2030: Manual Dispose
+                if Regex.IsMatch(source, @"\b[A-Za-z0-9_]+\.Dispose\(\)") then
+                    violations <- createViolation "FSA2030" "Manual Dispose: Explicit .Dispose() call detected. Use the 'use' keyword instead." Range.range0 :: violations
+
                 return violations |> List.rev
             }
