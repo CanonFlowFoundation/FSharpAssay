@@ -20,7 +20,7 @@
 
 ## Phase 1: Real-World "In-the-Wild" Validation
 - [x] Scan standard F# repositories (`CanonFlow` scanned - 776 violations found).
-- [ ] Document the delta between standard F# code and our extreme elite baseline.
+- [x] Document the delta between standard F# code and our extreme elite baseline.
 
 ## Phase 2: Open-Source Delivery
 - [ ] Release as standalone tool (`dotnet tool install -g fsassay`).
