@@ -1,10 +1,11 @@
 # Additional Repository Scans: Catching OOP Constructs
 
-To further validate `FsAssay` in the wild, we scanned three major F# repositories known for either OOP examples or community documentation:
+To further validate `FsAssay` in the wild, we scanned several major F# repositories known for either OOP examples, framework bridging, or community documentation:
 
 1. `jbtule/OOP-Patterns-in-FSharp`
 2. `efcore/EFCore.FSharp`
 3. `dotnet/docs/samples/snippets/fsharp`
+4. `osstotalsoft/NBB`
 
 ## Rules Engine Upgrade
 
@@ -36,5 +37,11 @@ The official Microsoft documentation snippets yielded surprising results:
 * Nearly 50 files triggered **FSA1005** (Parse, Don't Validate).
 * Many basic examples use `mutable` (**FSA1001**) and partial access operators (**FSA1002**).
 
+### 4. `osstotalsoft/NBB`
+This is a Node-Based Backend framework heavily integrating C# and F#. The scanner successfully found multiple bridging anti-patterns:
+* `QueryPipeline.fs` triggered **FSA1008** (OOP Inheritance).
+* `Interpreter.fs` triggered **FSA1003** (Null Reference).
+* Various test/benchmark files heavily overused **FSA1001** (Mutation Overuse).
+
 ## Conclusion
-The `FsAssay` rules engine is now highly mature. It not only prevents basic bad habits but actively guards the functional paradigm from being diluted by OOP translation layers and C#-isms.
+The `FsAssay` rules engine is now highly mature. It not only prevents basic bad habits but actively guards the functional paradigm from being diluted by OOP translation layers and C#-isms across every major community repo we tested.
