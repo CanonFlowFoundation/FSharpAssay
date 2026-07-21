@@ -10,12 +10,9 @@ let main argv =
     let file = Path.Combine(Directory.GetCurrentDirectory(), "dummy.fs")
     let source = """
 module Dummy
-let doSomething (x: int option) =
-    let v = x.Value
-    let v2 = Option.get x
-    let l = [1].Head
-    let l2 = List.head [1]
-    ()
+let doSomething () =
+    let x = Unchecked.defaultof<int>
+    x
 """
     let sourceText = SourceText.ofString source
     let options, _ = checker.GetProjectOptionsFromScript(file, sourceText) |> Async.RunSynchronously

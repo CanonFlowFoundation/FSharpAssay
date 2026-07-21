@@ -29,8 +29,6 @@ module Rules =
                         match expr with
                         | FSharpExprPatterns.Call(obj, func, _, _, args) ->
                             let name = func.FullName
-                            // Print the full name to the console so we can debug the tests
-                            System.Console.WriteLine("CALL: " + name)
                             if name = "Microsoft.FSharp.Core.OptionModule.GetValue" ||
                                name.EndsWith("FSharpOption`1.get_Value") ||
                                name = "Microsoft.FSharp.Collections.ListModule.Head" ||
@@ -40,6 +38,19 @@ module Rules =
                             
                             args |> List.iter visitExpr
                             obj |> Option.iter visitExpr
+                        | FSharpExprPatterns.Let((binding, valExpr, _), body) ->
+                            if binding.IsMutable then
+                                violations <- createViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." binding.DeclarationLocation :: violations
+                            visitExpr valExpr
+                            visitExpr body
+                        | FSharpExprPatterns.DefaultValue(_) ->
+                            violations <- createViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range :: violations
+                        | FSharpExprPatterns.Const(obj, _) ->
+                            if isNull obj then
+                                violations <- createViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range :: violations
+                        | FSharpExprPatterns.ValueSet(v, valExpr) ->
+                            violations <- createViolation "FSA1001" "Mutation Overuse: Avoid mutation. Use record copies with 'with' instead." expr.Range :: violations
+                            visitExpr valExpr
                         | _ ->
                             let prop = expr.GetType().GetProperty("ImmediateSubExpressions")
                             if not (isNull prop) then
@@ -52,20 +63,15 @@ module Rules =
                         | FSharpImplementationFileDeclaration.Entity(e, decls) ->
                             decls |> List.iter visitDecl
                         | FSharpImplementationFileDeclaration.MemberOrFunctionOrValue(v, args, body) ->
+                            if v.IsMutable then
+                                violations <- createViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." v.DeclarationLocation :: violations
                             visitExpr body
                         | FSharpImplementationFileDeclaration.InitAction(expr) ->
                             visitExpr expr
 
                     ctx.TypedTree.Value.Declarations |> List.iter visitDecl
                 
-                // FSA1001: Mutation Overuse
-                if source.Contains("mutable ") then
-                    violations <- createViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." Range.range0 :: violations
-                
-                // FSA1003: Null Reference
-                if Regex.IsMatch(source, @"\bnull\b") || source.Contains("Unchecked.defaultof") then
-                    violations <- createViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." Range.range0 :: violations
-                    
+                // Keep regex for the rest
                 // FSA1004: Primitive Obsession
                 if Regex.IsMatch(source, @"type\s+[A-Za-z0-9_]+\s*=\s*(string|int|float|bool|decimal|DateTime)\b") then
                     violations <- createViolation "FSA1004" "Primitive Obsession: Do not use type aliases for primitives. Use Single-Case Discriminated Unions to make illegal states unrepresentable." Range.range0 :: violations

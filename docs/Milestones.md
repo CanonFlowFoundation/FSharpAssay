@@ -12,7 +12,7 @@
 3. [x] Verdict kernel: pure outcomes, normalized findings and exit codes.
 4. [x] Project loading: real `.fsproj`/solution loading with compiler diagnostics.
 5. [x] FSA1002 TAST slice: exact symbol identity and ranges.
-6. [ ] FSA1001 AST slice: null expression with profile-aware disposition.
+6. [x] FSA1001/1003 TAST slice: mutation and null expression interception.
 7. [ ] Evidence: canonical JSON, SARIF and toolchain record.
 8. [ ] Profiles and suppression: core, shell, interop; visible authorization.
 9. [ ] Corpus adjudication: precision/recall per rule against manually labelled specimens.
