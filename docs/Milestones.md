@@ -15,7 +15,7 @@
 6. [x] FSA1001/1003 TAST slice: mutation and null expression interception.
 7. [x] Evidence: canonical JSON, SARIF and toolchain record.
 8. [x] Profiles and suppression: core, shell, interop; visible authorization.
-9. [ ] Corpus adjudication: precision/recall per rule against manually labelled specimens.
+9. [x] Corpus adjudication: precision/recall per rule against manually labelled specimens.
 10. [ ] Editor integration: only after CLI verification is trustworthy.
 
 ## Phase 1: Real-World "In-the-Wild" Validation - **[NOT STARTED]**

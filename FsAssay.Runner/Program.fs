@@ -1,5 +1,6 @@
 open System
 open System.IO
+open System.Text.RegularExpressions
 open FsAssay.Runner
 open FSharp.Analyzers.SDK
 open Argu
@@ -9,6 +10,7 @@ type Arguments =
     | [<AltCommandLine("-j")>] Out_Json of path:string
     | [<AltCommandLine("-s")>] Out_Sarif of path:string
     | [<AltCommandLine("-t")>] Out_Toolchain of path:string
+    | [<AltCommandLine("-a")>] Adjudicate
     with
         interface IArgParserTemplate with
             member s.Usage =
@@ -17,6 +19,7 @@ type Arguments =
                 | Out_Json _ -> "Output file path for canonical JSON."
                 | Out_Sarif _ -> "Output file path for SARIF."
                 | Out_Toolchain _ -> "Output file path for toolchain record."
+                | Adjudicate -> "Run in adjudication mode (evaluate Precision/Recall against // EXPECT comments)."
 
 [<EntryPoint>]
 let main argv =
@@ -53,20 +56,68 @@ let main argv =
                         if not (List.isEmpty violations) then
                             totalViolations <- totalViolations + violations.Length
                             allResults.Add(file, violations)
-                            printfn "\n❌ %s" file
-                            for v in violations do
-                                printfn "   └── [%s] %s (Line: %d)" v.Code v.Message v.Range.StartLine
+                            if not (results.Contains(Adjudicate)) then
+                                printfn "\n❌ %s" file
+                                for v in violations do
+                                    printfn "   └── [%s] %s (Line: %d)" v.Code v.Message v.Range.StartLine
                     | Skipped reason ->
                         skippedFiles <- skippedFiles + 1
                     | Failed fail ->
                         failedFiles <- failedFiles + 1
                         printfn "\n💥 Exception in %s: %A" file fail
 
-        printfn "\n--- Scan complete! ---"
-        printfn "Files scanned: %d" totalFiles
-        printfn "Skipped: %d" skippedFiles
-        printfn "Failed: %d" failedFiles
-        printfn "Total Violations: %d" totalViolations
+        if results.Contains(Adjudicate) then
+            printfn "\n--- Adjudication Mode ---"
+            let mutable totalExpected = 0
+            let mutable truePositives = 0
+            let mutable falsePositives = 0
+            let mutable falseNegatives = 0
+
+            let expectedMap = System.Collections.Generic.Dictionary<string, string list>()
+            let actualMap = System.Collections.Generic.Dictionary<string, string list>()
+
+            for options in optionsList do
+                for file in options.SourceFiles do
+                    if file.EndsWith(".fs") then
+                        let lines = File.ReadAllLines(file)
+                        for i = 0 to lines.Length - 1 do
+                            let line = lines.[i]
+                            let m = Regex.Match(line, @"//\s*EXPECT:\s*(FSA\d{4})")
+                            if m.Success then
+                                let code = m.Groups.[1].Value
+                                let key = sprintf "%s:%d:%s" file (i+1) code
+                                expectedMap.[key] <- []
+                                totalExpected <- totalExpected + 1
+
+            for (file, violations) in allResults do
+                for v in violations do
+                    let key = sprintf "%s:%d:%s" file v.Range.StartLine v.Code
+                    actualMap.[key] <- []
+
+            for key in expectedMap.Keys do
+                if actualMap.ContainsKey(key) then
+                    truePositives <- truePositives + 1
+                else
+                    falseNegatives <- falseNegatives + 1
+                    printfn "FN: Expected %s but was missed." key
+
+            for key in actualMap.Keys do
+                if not (expectedMap.ContainsKey(key)) then
+                    falsePositives <- falsePositives + 1
+                    printfn "FP: Unexpected %s." key
+
+            let precision = if truePositives + falsePositives = 0 then 1.0 else float truePositives / float (truePositives + falsePositives)
+            let recall = if truePositives + falseNegatives = 0 then 1.0 else float truePositives / float (truePositives + falseNegatives)
+
+            printfn "Precision: %.2f%%" (precision * 100.0)
+            printfn "Recall:    %.2f%%" (recall * 100.0)
+            printfn "TP: %d | FP: %d | FN: %d" truePositives falsePositives falseNegatives
+        else
+            printfn "\n--- Scan complete! ---"
+            printfn "Files scanned: %d" totalFiles
+            printfn "Skipped: %d" skippedFiles
+            printfn "Failed: %d" failedFiles
+            printfn "Total Violations: %d" totalViolations
 
         match results.TryGetResult(Out_Json) with
         | Some outPath ->
@@ -87,5 +138,8 @@ let main argv =
         | None -> ()
 
         if failedFiles > 0 then ExitCodes.ToolFailure
+        elif results.Contains(Adjudicate) then ExitCodes.Success
         elif totalViolations > 0 then ExitCodes.BlockingFinding
         else ExitCodes.Success
+
+
