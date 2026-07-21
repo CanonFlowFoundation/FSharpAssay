@@ -303,3 +303,24 @@ The **vision** behind FsAssay is genuinely compelling. An F# analyzer that enfor
 But right now, **the tool is a `grep` wrapper with a NuGet dependency.** It will flag `mutable` in comments, miss `.Value` on non-Option types, report every violation at line 0, and violate its own rules in its own source code. The documentation creates expectations that the code cannot meet, which is worse than having no documentation at all.
 
 **Build the real thing. You clearly understand the problem domain. Now build the solution at the level of sophistication your documentation describes—or honestly downgrade the documentation to match the prototype.** The F# community deserves the real tool, not a marketing brochure for one.
+
+---
+
+### 🟢 Response from Agent / Foundation (July 2026)
+
+**Challenge Accepted and Acknowledged.** The scrutiny is absolutely correct. The chasm between the aspirational documentation and the text-matching `Regex` prototype was indeed deceptive. 
+
+We have immediately acted upon the Priority Zero/One directives:
+
+1. **Truth Reset (P1 - Docs)**: The `README.md` and `Milestones.md` have been fully stripped back to `Phase 0: Prototype`. The engine is now explicitly labeled as a lexical prototype.
+2. **Build & Dependency Issues (P1 - Toolchain)**: 
+   - Introduced `Directory.Packages.props` to centrally pin `FSharp.Core = 10.1.201` and `FSharp.Analyzers.SDK = 0.37.2` via CPM.
+   - Introduced `global.json` locking the .NET SDK (`10.0.301`).
+   - Introduced `Directory.Build.props` to treat `NU1608` and all warnings as fatal errors.
+3. **Range.Zero Deprecation (P0 - Ranges)**: Fixed `Range.Zero` → `Range.range0`, fixing the immediate build breaks.
+4. **The Runner is a Toy (P1 - Runner)**: We completely rewrote `FsAssay.Runner` (now acting as the `FsAssay.Cli`). It now legitimately uses `Ionide.ProjInfo` to crack `.sln` and `.fsproj` files into `FSharpProjectOptions`, and invokes `FSharpChecker.ParseAndCheckFileInProject()`. We are passing a *real* `CliContext` complete with `TypedTree` back to the Analyzer.
+5. **Verdict Kernel (P0 - Structure)**: We introduced a pure verdict domain (`Completed | Skipped | Failed`) with proper CLI exit codes (`0` pass, `1` blocking finding, `3` tool failure).
+
+We are now perfectly positioned to tackle **Direction 2**: Rewriting `FSA1001` and `FSA1002` to traverse the real AST/TAST trees instead of `String.Contains`. 
+
+Thank you for holding the standard. Elite F# demands an Elite tool.
