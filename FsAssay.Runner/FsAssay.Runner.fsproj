@@ -6,6 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Domain.fs" />
+    <Compile Include="ProjectSystem.fs" />
+    <Compile Include="Orchestrator.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
@@ -17,6 +20,7 @@
     <PackageReference Include="FSharp.Core" />
     <PackageReference Include="FSharp.Compiler.Service" />
     <PackageReference Include="FSharp.Analyzers.SDK" />
+    <PackageReference Include="Ionide.ProjInfo.FCS" />
   </ItemGroup>
 
 </Project>
