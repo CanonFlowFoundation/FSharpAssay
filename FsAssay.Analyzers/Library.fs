@@ -171,5 +171,42 @@ module Rules =
                 if Regex.IsMatch(source, @"(\boverride\b|\bvirtual\b)") then
                     violations <- createViolation "FSA2018" "Inheritance Depth: override or virtual detected. Use composition." Range.range0 :: violations
 
+                // Features from Gpt2.md
+                // FSA2019: Missing Computation Expression (Nested Match)
+                if Regex.IsMatch(source, @"match.*with\s*\|\s*(Some|Ok).*->\s*match", RegexOptions.Singleline) then
+                    violations <- createViolation "FSA2019" "Missing Computation Expression: Nested Result/Option matching detected. Use a Computation Expression." Range.range0 :: violations
+
+                // FSA2020: Signature Blindness
+                if Regex.IsMatch(source, @"\([A-Za-z0-9_]+\s*:\s*(int|string|float|decimal|bool)\)\s*\([A-Za-z0-9_]+\s*:\s*\1\)") then
+                    violations <- createViolation "FSA2020" "Signature Blindness: Consecutive primitive arguments of the same type detected." Range.range0 :: violations
+
+                // FSA2021: Flag-Based State Machine
+                if Regex.IsMatch(source, @"(Is[A-Z][a-zA-Z0-9_]*\s*:\s*bool).*?(Is[A-Z][a-zA-Z0-9_]*\s*:\s*bool)", RegexOptions.Singleline) then
+                    violations <- createViolation "FSA2021" "Flag-Based State Machine: Multiple boolean flags detected in a type. Use a DU." Range.range0 :: violations
+
+                // FSA2022: Impure Core
+                if Regex.IsMatch(source, @"\bSystem\.IO\.File\b|\bHttpClient\b|\bConsole\.Write") then
+                    violations <- createViolation "FSA2022" "Impure Core: I/O side effects detected without explicit functional boundaries." Range.range0 :: violations
+
+                // FSA2023: Nested Function Application
+                if Regex.IsMatch(source, @"\b[A-Za-z0-9_]+\s*\(\s*[A-Za-z0-9_]+\s*\(") then
+                    violations <- createViolation "FSA2023" "Nested Function Application: Deep nesting detected. Consider using the |> operator." Range.range0 :: violations
+
+                // FSA2024: Missed Active Pattern
+                if Regex.IsMatch(source, @"\bif\b.*\belif\b.*\belif\b", RegexOptions.Singleline) then
+                    violations <- createViolation "FSA2024" "Missed Active Pattern: Complex if/elif chains detected. Consider an Active Pattern." Range.range0 :: violations
+
+                // FSA2025: Boolean Parameter Blindness
+                if Regex.IsMatch(source, @"let\s+[A-Za-z0-9_]+\s+(true|false)\s+(true|false)") || Regex.IsMatch(source, @"\bbool\b\s*->\s*\bbool\b\s*->") then
+                    violations <- createViolation "FSA2025" "Boolean Parameter Blindness: Consecutive boolean parameters/types detected." Range.range0 :: violations
+
+                // FSA2026: Option Constellation
+                if Regex.IsMatch(source, @"[A-Za-z0-9_]+\s*option.*?[A-Za-z0-9_]+\s*option.*?[A-Za-z0-9_]+\s*option", RegexOptions.Singleline) then
+                    violations <- createViolation "FSA2026" "Option Constellation: Multiple optional fields detected. Represent states with a DU." Range.range0 :: violations
+
+                // FSA2027: Stringly Error Channel
+                if Regex.IsMatch(source, @"Result<[^,]+,\s*string>") then
+                    violations <- createViolation "FSA2027" "Stringly Error Channel: Result returning a primitive string error. Use a domain error DU." Range.range0 :: violations
+
                 return violations |> List.rev
             }
