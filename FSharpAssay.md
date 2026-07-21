@@ -7,7 +7,7 @@ supersedes: FS_ASSAY_IMPLEMENTATION_PLAN.md v1.0.0
 source_skills_revision: arun6202/ai-skills@18c4217
 review_basis: Qwen review, independently verified and selectively adopted
 
-
+Enforce all fsharp idiomic from https://github.com/ArunNotFound/functional-skills
 
 ---
 
