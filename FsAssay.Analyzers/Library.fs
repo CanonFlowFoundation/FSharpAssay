@@ -127,5 +127,49 @@ module Rules =
                 if Regex.IsMatch(source, @"\bResizeArray\b") || source.Contains("System.Collections.Generic.List") || source.Contains("System.Collections.Generic.Dictionary") then
                     violations <- createViolation "FSA1009" "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list." Range.range0 :: violations
 
+                // FSA2008: Enum Instead of DU
+                if Regex.IsMatch(source, @"type\s+[A-Za-z0-9_]+\s*=\s*\|\s*[A-Za-z0-9_]+\s*=\s*\d+") then
+                    violations <- createViolation "FSA2008" "Enum Instead of DU: C#-style enum detected. Replace with a Discriminated Union." Range.range0 :: violations
+
+                // FSA2009: Exhaustiveness Evasion
+                if Regex.IsMatch(source, @"\|\s*_\s*->") then
+                    violations <- createViolation "FSA2009" "Exhaustiveness Evasion: Wildcard '_' pattern detected on a DU match. Enumerate all cases." Range.range0 :: violations
+
+                // FSA2010: Object Erasure
+                if Regex.IsMatch(source, @"\bobj\b|System\.Object\b") then
+                    violations <- createViolation "FSA2010" "Object Erasure: 'obj' or 'System.Object' used where a Discriminated Union or generic would preserve type safety." Range.range0 :: violations
+
+                // FSA2011: Conditional Dispatch on Sum Types
+                if Regex.IsMatch(source, @"\bif\b.*match\b|\.Is[A-Z][a-zA-Z0-9_]*") then
+                    violations <- createViolation "FSA2011" "Conditional Dispatch on Sum Types: If/elif chain dispatching on identity detected." Range.range0 :: violations
+
+                // FSA2012: Mutable Collection Intrusion
+                if Regex.IsMatch(source, @"\bHashSet\b|System\.Collections\.Generic\.HashSet") then
+                    violations <- createViolation "FSA2012" "Mutable Collection Intrusion: BCL mutable collection detected in domain logic." Range.range0 :: violations
+
+                // FSA2013: Destructive Collection Mutation
+                if Regex.IsMatch(source, @"\.(Add|Remove|Clear)\(|\.[A-Za-z0-9_]+\s*<-") then
+                    violations <- createViolation "FSA2013" "Destructive Collection Mutation: In-place collection mutation detected." Range.range0 :: violations
+
+                // FSA2014: Imperative Accumulation
+                if Regex.IsMatch(source, @"let\s+mutable.*\n*.*(while|for)") then
+                    violations <- createViolation "FSA2014" "Imperative Accumulation: Mutable accumulator with loop detected." Range.range0 :: violations
+
+                // FSA2015: Redundant Type Annotation
+                if Regex.IsMatch(source, @"let\s+[a-zA-Z0-9_]+\s*:\s*[a-zA-Z0-9_]+\s*=") then
+                    violations <- createViolation "FSA2015" "Redundant Type Annotation: Type annotation matches inferred type." Range.range0 :: violations
+
+                // FSA2016: Unsafe Cast
+                if Regex.IsMatch(source, @"(:?>|:>|\bbox\b|\bunbox\b)") then
+                    violations <- createViolation "FSA2016" "Unsafe Cast: Runtime cast detected. Model alternatives as a DU." Range.range0 :: violations
+
+                // FSA2017: Reflection-Based Dispatch
+                if Regex.IsMatch(source, @"(typeof<|\.GetType\(\)|Activator\.CreateInstance|System\.Reflection)") then
+                    violations <- createViolation "FSA2017" "Reflection-Based Dispatch: Runtime type inspection used for dispatch." Range.range0 :: violations
+
+                // FSA2018: Inheritance Depth / Interface Obsession
+                if Regex.IsMatch(source, @"(\boverride\b|\bvirtual\b)") then
+                    violations <- createViolation "FSA2018" "Inheritance Depth: override or virtual detected. Use composition." Range.range0 :: violations
+
                 return violations |> List.rev
             }
