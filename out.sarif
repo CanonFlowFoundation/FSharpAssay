@@ -1,0 +1,1193 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "results": [
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Tests/Program.fs"
+                },
+                "region": {
+                  "endColumn": 56,
+                  "endLine": 26,
+                  "startColumn": 25,
+                  "startLine": 26
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Tests/Program.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Primitive Obsession: Do not use type aliases for primitives. Use Single-Case Discriminated Unions to make illegal states unrepresentable."
+          },
+          "ruleId": "FSA1004"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Tests/Program.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Parse, Don\u0027t Validate: Functions should return Result\u003CParsedType, Error\u003E rather than a boolean validity flag."
+          },
+          "ruleId": "FSA1005"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Tests/Program.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Generic Catch: Do not catch generic exceptions for flow control. Use Result types instead."
+          },
+          "ruleId": "FSA1006"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Tests/Program.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Imperative Loops: Avoid \u0027while\u0027 loops. Use Seq.fold or recursion."
+          },
+          "ruleId": "FSA1007"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Tests/Program.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "OOP Inheritance: Avoid OOP inheritance and interfaces. Use records of functions or Discriminated Unions."
+          },
+          "ruleId": "FSA1008"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Tests/Program.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list."
+          },
+          "ruleId": "FSA1009"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 39,
+                  "endLine": 25,
+                  "startColumn": 29,
+                  "startLine": 25
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 40,
+                  "endLine": 27,
+                  "startColumn": 20,
+                  "startLine": 27
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 53,
+                  "endLine": 31,
+                  "startColumn": 40,
+                  "startLine": 31
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 178,
+                  "endLine": 37,
+                  "startColumn": 33,
+                  "startLine": 37
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 164,
+                  "endLine": 37,
+                  "startColumn": 154,
+                  "startLine": 37
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 75,
+                  "endLine": 36,
+                  "startColumn": 29,
+                  "startLine": 32
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 49,
+                  "endLine": 42,
+                  "startColumn": 32,
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 190,
+                  "endLine": 43,
+                  "startColumn": 33,
+                  "startLine": 43
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 176,
+                  "endLine": 43,
+                  "startColumn": 149,
+                  "startLine": 43
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 54,
+                  "endLine": 42,
+                  "startColumn": 29,
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 173,
+                  "endLine": 47,
+                  "startColumn": 29,
+                  "startLine": 47
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 159,
+                  "endLine": 47,
+                  "startColumn": 149,
+                  "startLine": 47
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 177,
+                  "endLine": 50,
+                  "startColumn": 33,
+                  "startLine": 50
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 163,
+                  "endLine": 50,
+                  "startColumn": 153,
+                  "startLine": 50
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 47,
+                  "endLine": 49,
+                  "startColumn": 29,
+                  "startLine": 49
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 168,
+                  "endLine": 52,
+                  "startColumn": 29,
+                  "startLine": 52
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 154,
+                  "endLine": 52,
+                  "startColumn": 144,
+                  "startLine": 52
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 48,
+                  "endLine": 59,
+                  "startColumn": 33,
+                  "startLine": 58
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 54,
+                  "endLine": 56,
+                  "startColumn": 29,
+                  "startLine": 56
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 43,
+                  "endLine": 66,
+                  "startColumn": 32,
+                  "startLine": 66
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 184,
+                  "endLine": 67,
+                  "startColumn": 33,
+                  "startLine": 67
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 170,
+                  "endLine": 67,
+                  "startColumn": 149,
+                  "startLine": 67
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 48,
+                  "endLine": 66,
+                  "startColumn": 29,
+                  "startLine": 66
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 53,
+                  "endLine": 72,
+                  "startColumn": 21,
+                  "startLine": 72
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 40,
+                  "endLine": 72,
+                  "startColumn": 21,
+                  "startLine": 72
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 76,
+                  "endLine": 72,
+                  "startColumn": 21,
+                  "startLine": 72
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 45,
+                  "endLine": 27,
+                  "startColumn": 17,
+                  "startLine": 27
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 227,
+                  "endLine": 77,
+                  "startColumn": 21,
+                  "startLine": 77
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 227,
+                  "endLine": 77,
+                  "startColumn": 21,
+                  "startLine": 77
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 120,
+                  "endLine": 76,
+                  "startColumn": 17,
+                  "startLine": 76
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 199,
+                  "endLine": 81,
+                  "startColumn": 21,
+                  "startLine": 81
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 199,
+                  "endLine": 81,
+                  "startColumn": 21,
+                  "startLine": 81
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 109,
+                  "endLine": 80,
+                  "startColumn": 17,
+                  "startLine": 80
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 180,
+                  "endLine": 85,
+                  "startColumn": 21,
+                  "startLine": 85
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 180,
+                  "endLine": 85,
+                  "startColumn": 21,
+                  "startLine": 85
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 137,
+                  "endLine": 84,
+                  "startColumn": 17,
+                  "startLine": 84
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 155,
+                  "endLine": 89,
+                  "startColumn": 21,
+                  "startLine": 89
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 155,
+                  "endLine": 89,
+                  "startColumn": 21,
+                  "startLine": 89
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 60,
+                  "endLine": 88,
+                  "startColumn": 17,
+                  "startLine": 88
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 194,
+                  "endLine": 93,
+                  "startColumn": 21,
+                  "startLine": 93
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 194,
+                  "endLine": 93,
+                  "startColumn": 21,
+                  "startLine": 93
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 162,
+                  "endLine": 92,
+                  "startColumn": 17,
+                  "startLine": 92
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 176,
+                  "endLine": 97,
+                  "startColumn": 21,
+                  "startLine": 97
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead."
+          },
+          "ruleId": "FSA1001"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 176,
+                  "endLine": 97,
+                  "startColumn": 21,
+                  "startLine": 97
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 180,
+                  "endLine": 96,
+                  "startColumn": 17,
+                  "startLine": 96
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values."
+          },
+          "ruleId": "FSA1003"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Parse, Don\u0027t Validate: Functions should return Result\u003CParsedType, Error\u003E rather than a boolean validity flag."
+          },
+          "ruleId": "FSA1005"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Generic Catch: Do not catch generic exceptions for flow control. Use Result types instead."
+          },
+          "ruleId": "FSA1006"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Imperative Loops: Avoid \u0027while\u0027 loops. Use Seq.fold or recursion."
+          },
+          "ruleId": "FSA1007"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/fsharp/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 1,
+                  "endLine": 1,
+                  "startColumn": 1,
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list."
+          },
+          "ruleId": "FSA1009"
+        }
+      ],
+      "tool": {
+        "driver": {
+          "informationUri": "https://github.com/CanonFlowFoundation/FSharpAssay",
+          "name": "FsAssay",
+          "version": "1.0.0"
+        }
+      }
+    }
+  ],
+  "version": "2.1.0"
+}
