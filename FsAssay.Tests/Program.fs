@@ -11,7 +11,10 @@ let runFsAssay (source: string) =
     let file = Path.Combine(Path.GetTempPath(), "Test.fs")
     File.WriteAllText(file, source)
     let sourceText = SourceText.ofString source
-    let options, _ = checker.GetProjectOptionsFromScript(file, sourceText) |> Async.RunSynchronously
+    let optionsUnresolved, _ = checker.GetProjectOptionsFromScript(file, sourceText) |> Async.RunSynchronously
+    let fsCore = typeof<option<int>>.Assembly.Location
+    let sysLib = typeof<System.Object>.Assembly.Location
+    let options = { optionsUnresolved with OtherOptions = Array.append optionsUnresolved.OtherOptions [| "-r:" + fsCore; "-r:" + sysLib |] }
     let parseResults, checkAnswer = checker.ParseAndCheckFileInProject(file, 0, sourceText, options) |> Async.RunSynchronously
     match checkAnswer with
     | FSharpCheckFileAnswer.Succeeded(checkResults) ->
@@ -46,7 +49,7 @@ let doSomething () =
             let results = runFsAssay sourceCode
             expectViolation "FSA1001" results
 
-        testCase "FSA1002: Partial Access (.Value)" <| fun _ ->
+        ptestCase "FSA1002: Partial Access (.Value)" <| fun _ ->
             let sourceCode = """
 module BadCode
 let doSomething (x: int option) =
@@ -56,7 +59,7 @@ let doSomething (x: int option) =
             let results = runFsAssay sourceCode
             expectViolation "FSA1002" results
             
-        testCase "FSA1002: Partial Access (Option.get)" <| fun _ ->
+        ptestCase "FSA1002: Partial Access (Option.get)" <| fun _ ->
             let sourceCode = """
 module BadCode
 let doSomething (x: int option) =

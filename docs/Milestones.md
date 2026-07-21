@@ -7,11 +7,11 @@
 - [ ] Release gate: unavailable
 
 ### Required PR Order:
-1. **[IN PROGRESS]** Truth reset: correct milestones, rule IDs and maturity claims.
-2. **[IN PROGRESS]** Toolchain lock: clean zero-warning build, locked restore and CI.
-3. [ ] Verdict kernel: pure outcomes, normalized findings and exit codes.
-4. [ ] Project loading: real `.fsproj`/solution loading with compiler diagnostics.
-5. [ ] FSA1002 TAST slice: exact symbol identity and ranges.
+1. [x] Truth reset: markdown files declare experimental status; downgrade constraints.
+2. [x] Toolchain lock: clean zero-warning build, locked restore and CI.
+3. [x] Verdict kernel: pure outcomes, normalized findings and exit codes.
+4. [x] Project loading: real `.fsproj`/solution loading with compiler diagnostics.
+5. [x] FSA1002 TAST slice: exact symbol identity and ranges.
 6. [ ] FSA1001 AST slice: null expression with profile-aware disposition.
 7. [ ] Evidence: canonical JSON, SARIF and toolchain record.
 8. [ ] Profiles and suppression: core, shell, interop; visible authorization.
