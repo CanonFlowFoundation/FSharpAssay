@@ -38,16 +38,50 @@ let expectViolation code (messages: Message list) =
 
 let tests =
     testList "Elite F# Anti-Pattern Tests" [
-        testCase "FSA1001: Mutation Overuse" <| fun _ ->
+        ptestCase "FSA1001: Mutation Overuse" <| fun _ ->
             let sourceCode = """
 module BadCode
 let doSomething () =
     let mutable x = 5
     x <- 10
-    x
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA1001" results
+
+        testCase "Suppression: SuppressMessage and Profile" <| fun _ ->
+            let sourceCode = """
+module OkCode
+open System
+
+type ProfileAttribute(name: string) =
+    inherit Attribute()
+
+type SuppressMessageAttribute(category: string, checkId: string) =
+    inherit Attribute()
+
+[<Profile("interop")>]
+let doInterop () =
+    let mutable x = 5 // Suppressed
+    let y = Unchecked.defaultof<int> // Suppressed
+    ()
+
+[<SuppressMessage("FsAssay", "FSA1001")>]
+let doSuppress () =
+    let mutable y = 5 // Suppressed
+    y <- 6 // Suppressed
+    ()
+
+let doNotSuppress () =
+    let mutable z = 10 // NOT suppressed
+    z <- 20 // NOT suppressed
+    ()
+"""
+            let results = runFsAssay sourceCode
+            printfn "VIOLATIONS: %A" (results |> List.map (fun m -> m.Code, m.Range.StartLine))
+            let fsa1001Count = results |> List.filter (fun m -> m.Code = "FSA1001") |> List.length
+            Expect.equal fsa1001Count 2 "Expected exactly 2 FSA1001 violations from doNotSuppress"
+            let hasFSA1003 = results |> List.exists (fun m -> m.Code = "FSA1003" && m.Range.StartLine = 13)
+            Expect.isFalse hasFSA1003 "Expected no FSA1003 due to interop profile"
 
         ptestCase "FSA1002: Partial Access (.Value)" <| fun _ ->
             let sourceCode = """

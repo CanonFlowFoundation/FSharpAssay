@@ -17,6 +17,26 @@ module Rules =
             Fixes = []
         }
 
+    let extractSuppressions (attrs: seq<FSharpAttribute>) =
+        attrs
+        |> Seq.choose (fun a ->
+            let name = a.AttributeType.LogicalName
+            if name = "SuppressMessageAttribute" || name = "SuppressMessage" then
+                let args = a.ConstructorArguments
+                if args.Count >= 2 then
+                    let category = snd args.[0] :?> string
+                    let checkId = snd args.[1] :?> string
+                    if category = "FsAssay" then Some checkId else None
+                else None
+            elif name = "ProfileAttribute" || name = "Profile" then
+                let args = a.ConstructorArguments
+                if args.Count >= 1 then
+                    let profile = snd args.[0] :?> string
+                    Some ("PROFILE:" + profile)
+                else None
+            else None)
+        |> Seq.toList
+
     [<CliAnalyzer "FSA_All">]
     let antiPatternAnalyzer : Analyzer<CliContext> =
         fun ctx ->
@@ -25,7 +45,15 @@ module Rules =
                 let mutable violations = []
                 
                 if ctx.TypedTree.IsSome then
-                    let rec visitExpr (expr: FSharpExpr) =
+                    let addViolation code msg range (sups: string list) =
+                        let isSuppressed = 
+                            sups |> List.contains code ||
+                            (code = "FSA1003" && sups |> List.contains "PROFILE:interop") ||
+                            (code = "FSA1001" && sups |> List.contains "PROFILE:interop")
+                        if not isSuppressed then
+                            violations <- createViolation code msg range :: violations
+
+                    let rec visitExpr (expr: FSharpExpr) (sups: string list) =
                         match expr with
                         | FSharpExprPatterns.Call(obj, func, _, _, args) ->
                             let name = func.FullName
@@ -34,42 +62,45 @@ module Rules =
                                name = "Microsoft.FSharp.Collections.ListModule.Head" ||
                                name = "Microsoft.FSharp.Collections.SeqModule.Head" ||
                                name.EndsWith("FSharpList`1.get_Head") then
-                                violations <- createViolation "FSA1002" "Partial Access: Do not use Option.get, .Value, or .Head. Use pattern matching." expr.Range :: violations
+                                addViolation "FSA1002" "Partial Access: Do not use Option.get, .Value, or .Head. Use pattern matching." expr.Range sups
                             
-                            args |> List.iter visitExpr
-                            obj |> Option.iter visitExpr
+                            args |> List.iter (fun a -> visitExpr a sups)
+                            obj |> Option.iter (fun o -> visitExpr o sups)
                         | FSharpExprPatterns.Let((binding, valExpr, _), body) ->
+                            let localSups = extractSuppressions binding.Attributes @ sups
                             if binding.IsMutable then
-                                violations <- createViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." binding.DeclarationLocation :: violations
-                            visitExpr valExpr
-                            visitExpr body
+                                addViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." binding.DeclarationLocation localSups
+                            visitExpr valExpr localSups
+                            visitExpr body localSups
                         | FSharpExprPatterns.DefaultValue(_) ->
-                            violations <- createViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range :: violations
+                            addViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups
                         | FSharpExprPatterns.Const(obj, _) ->
                             if isNull obj then
-                                violations <- createViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range :: violations
+                                addViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups
                         | FSharpExprPatterns.ValueSet(v, valExpr) ->
-                            violations <- createViolation "FSA1001" "Mutation Overuse: Avoid mutation. Use record copies with 'with' instead." expr.Range :: violations
-                            visitExpr valExpr
+                            addViolation "FSA1001" "Mutation Overuse: Avoid mutation. Use record copies with 'with' instead." expr.Range sups
+                            visitExpr valExpr sups
                         | _ ->
                             let prop = expr.GetType().GetProperty("ImmediateSubExpressions")
                             if not (isNull prop) then
                                 let subExprs = prop.GetValue(expr) :?> seq<FSharpExpr>
                                 for e in subExprs do
-                                    visitExpr e
+                                    visitExpr e sups
 
-                    let rec visitDecl (decl: FSharpImplementationFileDeclaration) =
+                    let rec visitDecl (decl: FSharpImplementationFileDeclaration) (sups: string list) =
                         match decl with
                         | FSharpImplementationFileDeclaration.Entity(e, decls) ->
-                            decls |> List.iter visitDecl
+                            let localSups = extractSuppressions e.Attributes @ sups
+                            decls |> List.iter (fun d -> visitDecl d localSups)
                         | FSharpImplementationFileDeclaration.MemberOrFunctionOrValue(v, args, body) ->
+                            let localSups = extractSuppressions v.Attributes @ sups
                             if v.IsMutable then
-                                violations <- createViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." v.DeclarationLocation :: violations
-                            visitExpr body
+                                addViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." v.DeclarationLocation localSups
+                            visitExpr body localSups
                         | FSharpImplementationFileDeclaration.InitAction(expr) ->
-                            visitExpr expr
+                            visitExpr expr sups
 
-                    ctx.TypedTree.Value.Declarations |> List.iter visitDecl
+                    ctx.TypedTree.Value.Declarations |> List.iter (fun d -> visitDecl d [])
                 
                 // Keep regex for the rest
                 // FSA1004: Primitive Obsession

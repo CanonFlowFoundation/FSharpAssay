@@ -10,6 +10,12 @@ let main argv =
     let file = Path.Combine(Directory.GetCurrentDirectory(), "dummy.fs")
     let source = """
 module Dummy
+open System
+
+type ProfileAttribute(name: string) =
+    inherit Attribute()
+
+[<Profile("interop")>]
 let doSomething () =
     let x = Unchecked.defaultof<int>
     x
@@ -38,6 +44,11 @@ let doSomething () =
             | FSharpImplementationFileDeclaration.Entity(e, decls) ->
                 decls |> List.iter visitDecl
             | FSharpImplementationFileDeclaration.MemberOrFunctionOrValue(v, args, body) ->
+                printfn "MEMBER: %s" v.LogicalName
+                v.Attributes |> Seq.iter (fun a -> 
+                    printfn "ATTR: %s" a.AttributeType.LogicalName
+                    a.ConstructorArguments |> Seq.iter (fun (_, arg) -> printfn "ARG: %A" arg)
+                )
                 visitExpr body
             | FSharpImplementationFileDeclaration.InitAction(expr) ->
                 visitExpr expr
