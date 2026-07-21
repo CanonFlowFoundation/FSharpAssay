@@ -1,0 +1,14 @@
+<Project>
+  <!-- FsAssay MSBuild Quality Gate Hook for AGY / Antigravity AI Coding Agents -->
+  <PropertyGroup>
+    <FsAssayEnabled Condition="'$(FsAssayEnabled)' == ''">true</FsAssayEnabled>
+    <FsAssayRunnerPath Condition="'$(FsAssayRunnerPath)' == ''">$(MSBuildThisFileDirectory)FsAssay.Runner/bin/Debug/net10.0/FsAssay.Runner.dll</FsAssayRunnerPath>
+  </PropertyGroup>
+
+  <Target Name="FsAssayQualityGate" AfterTargets="Build" Condition="'$(FsAssayEnabled)' == 'true' And '$(BuildingProject)' == 'true' And '$(IsTestProject)' != 'true'">
+    <Message Text="🧪 [FsAssay MSBuild Hook] Executing Code Quality Gate check on $(MSBuildProjectDirectory)..." Priority="high" />
+    <Exec Command="dotnet &quot;$(FsAssayRunnerPath)&quot; &quot;$(MSBuildProjectDirectory)&quot;" 
+          ContinueOnError="false" 
+          IgnoreExitCode="false" />
+  </Target>
+</Project>

@@ -9,6 +9,34 @@ If you are treating F# like C# with different syntax, FsAssay will find you.
 
 ---
 
+## ⚡ MSBuild Build Hook for AGY / AI Coding Agents (Unbypassable)
+
+To ensure AI coding agents (like **Antigravity / AGY**) cannot bypass code quality rules when generating or modifying F# code, FsAssay hooks directly into `dotnet build` via MSBuild. 
+
+Whenever `dotnet build` is executed by AGY or in CI/CD pipelines, FsAssay runs post-compile and automatically halts the build if hostile anti-patterns are introduced (`ExitCodes.BlockingFinding`).
+
+### How to Hook `dotnet build` in Any Repository:
+
+Add a `Directory.Build.targets` file to your solution root:
+
+```xml
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)FsAssay.targets" Condition="Exists('$(MSBuildThisFileDirectory)FsAssay.targets')" />
+</Project>
+```
+
+Or add the target directly to your `.fsproj`:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <Target Name="FsAssayQualityGate" AfterTargets="Build" Condition="'$(BuildingProject)' == 'true'">
+    <Exec Command="fsassay &quot;$(MSBuildProjectDirectory)&quot;" ContinueOnError="false" />
+  </Target>
+</Project>
+```
+
+---
+
 ## 🏆 Code Quality Rate Card & Material Design 5 Dashboard
 
 FsAssay includes an automated **Code Quality Rating Engine** that evaluates codebases across an **Anti-Pattern Spectrum** (Goodness vs. Imperative Intrusion vs. Hostile Anti-Patterns) to assign an overall grade and score:
@@ -22,11 +50,17 @@ FsAssay includes an automated **Code Quality Rating Engine** that evaluates code
 ### 🚀 CLI Usage & Reporting Options
 
 ```bash
-# Generate Markdown Rate Card (-r) and Material Design 5 HTML Dashboard (-m)
-dotnet run --project FsAssay.Runner -- -r ratecard.md -m dashboard.html /path/to/target
+# Automated Quick-Fix Refactoring Mode (--fix)
+fsassay --fix /path/to/target
 
-# Canonical JSON output (-j) & SARIF format (-s)
-dotnet run --project FsAssay.Runner -- -j output.json -s output.sarif /path/to/target
+# Live Material Design 5 Dashboard Server (--serve)
+fsassay --serve 8080 /path/to/target
+
+# Continuous Watcher Mode (--watch)
+fsassay --watch /path/to/target
+
+# Markdown Rate Card (-r) & Material HTML Dashboard (-m)
+fsassay -r ratecard.md -m dashboard.html /path/to/target
 ```
 
 ---
@@ -60,13 +94,3 @@ FsAssay uses a Test-Driven Development (TDD) approach with `Expecto` to safely c
 # Run the Expecto Test Suite
 dotnet run --project FsAssay.Tests
 ```
-
----
-
-## 📚 Philosophy & Inspiration
-
-This project draws heavy inspiration from the following resources:
-- [Domain Modeling Made Functional](https://fsharpforfunandprofit.com/ddd/) by Scott Wlaschin
-- [Stylish F#](https://github.com/ArunNotFound/functional-skills/blob/main/stylish-fsharp/SKILL.md)
-- [Workflows in F#](https://github.com/mjul/workflows-in-fsharp)
-- [F# Cheatsheet](https://fsprojects.github.io/fsharp-cheatsheet/)
