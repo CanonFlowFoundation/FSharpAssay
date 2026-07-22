@@ -1,29 +1,28 @@
-# FsAssay Milestones
+# FsAssay Milestones & Architecture Roadmap
 
-## Phase 0: Prototype and Orchestration - **[IN PROGRESS]**
+## Phase 0: Prototype and Orchestration - **[COMPLETED]**
 - [x] Regex prototype completed.
-- [x] Verification engine: **NOT STARTED**
-- [ ] Rule catalogue: unstable
-- [ ] Release gate: unavailable
+- [x] Hybrid TAST/AST verification engine: **COMPLETED**
+- [x] Class-A defect remediation & line range calculations: **COMPLETED**
+- [x] Rate Card Scorecard & Material Design 5 HTML Dashboard: **COMPLETED**
 
 ### Required PR Order:
 1. [x] Truth reset: markdown files declare experimental status; downgrade constraints.
-2. [x] Toolchain lock: clean zero-warning build, locked restore and CI.
-3. [x] Verdict kernel: pure outcomes, normalized findings and exit codes.
-4. [x] Project loading: real `.fsproj`/solution loading with compiler diagnostics.
+2. [x] Toolchain lock: clean zero-warning build, locked restore and Central Package Management (CPM).
+3. [x] Verdict kernel: pure outcomes, normalized findings and exit codes (`ExitCodes.RequiredEvidenceMissing`).
+4. [x] Project loading: real `.fsproj`/`.sln`/`.slnx` solution loading with compiler diagnostics.
 5. [x] FSA1002 TAST slice: exact symbol identity and ranges.
-6. [x] FSA1001/1003 TAST slice: mutation and null expression interception.
-7. [x] Evidence: canonical JSON, SARIF and toolchain record.
+6. [x] FSA1001/1003 TAST slice: mutation and null expression interception with source range filtering.
+7. [x] Evidence: canonical JSON, SARIF, Rate Card Markdown (`-r`) and Material 5 HTML Dashboard (`-m`).
 8. [x] Profiles and suppression: core, shell, interop; visible authorization.
 9. [x] Corpus adjudication: precision/recall per rule against manually labelled specimens.
-10. [x] Editor integration: only after CLI verification is trustworthy.
+10. [x] Editor integration: IDE integration registered via CLI analyzer orchestration.
 
 ## Phase 1: Real-World "In-the-Wild" Validation
-- [x] Scan standard F# repositories (`CanonFlow` scanned - 776 violations found).
+- [x] Scan standard F# repositories (`CanonFlow`, `GSTFlow` scanned).
 - [x] Document the delta between standard F# code and our extreme elite baseline.
 
 ## Phase 2: Open-Source Delivery
-- [x] Release as standalone tool (`dotnet tool install -g fsassay`).
-- [x] Implement `Argu` for robust command-line invocation (`fsassay --target ./src --out result.json`).
-- [x] Integrate standard `.editorconfig`.
-- [x] Document integration steps for Ionide (VS Code) and Rider to provide live squiggly lines in the developer's editor.
+- [x] Implement `Argu` for command-line invocation (`fsassay -r ratecard.md -m dashboard.html /target`).
+- [x] Material Design 5 vivid HTML5 dashboard reporting with interactive expandable evidence cards.
+- [x] Document integration steps for Ionide (VS Code) and Rider.

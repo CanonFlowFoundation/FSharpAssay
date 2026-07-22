@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -6,7 +6,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="CsharpishOrderProcessor.fs" />
+    <Compile Include="StylishOrderProcessor.fs" />
     <Compile Include="Library.fs" />
+    <Compile Include="SectionA_ComputationAndComposition.fs" />
+    <Compile Include="SectionB_AlgebraicTypesAndExhaustiveness.fs" />
+    <Compile Include="SectionC_ImmutabilityAndCollections.fs" />
+    <Compile Include="SectionD_ObjectHierarchiesAndModules.fs" />
+    <Compile Include="SectionE_ErrorsAndResourceHandling.fs" />
+    <Compile Include="SectionF_DomainModeling.fs" />
+    <Compile Include="SectionG_ConcurrencyAndSharedState.fs" />
+    <Compile Include="SectionH_StructureAndReadability.fs" />
   </ItemGroup>
 
 </Project>

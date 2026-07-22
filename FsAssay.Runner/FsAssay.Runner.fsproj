@@ -13,9 +13,12 @@
 
   <ItemGroup>
     <Compile Include="Domain.fs" />
+    <Compile Include="Config.fs" />
+    <Compile Include="AutoFix.fs" />
     <Compile Include="ProjectSystem.fs" />
     <Compile Include="Orchestrator.fs" />
     <Compile Include="Output.fs" />
+    <Compile Include="Server.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

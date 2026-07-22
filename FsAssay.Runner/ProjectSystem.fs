@@ -7,7 +7,7 @@ open FSharp.Compiler.CodeAnalysis
 module ProjectSystem =
 
     let loadProjects (paths: string list) =
-        let toolsPath = Init.init (DirectoryInfo(Directory.GetCurrentDirectory())) None
+        let toolsPath = None |> Init.init (Directory.GetCurrentDirectory() |> DirectoryInfo)
         let loader = WorkspaceLoader.Create(toolsPath, [])
         let parsed = loader.LoadProjects paths
         
@@ -16,7 +16,7 @@ module ProjectSystem =
         |> Seq.toList
 
     let loadSolution (path: string) =
-        let toolsPath = Init.init (DirectoryInfo(Directory.GetCurrentDirectory())) None
+        let toolsPath = None |> Init.init (Directory.GetCurrentDirectory() |> DirectoryInfo)
         let loader = WorkspaceLoader.Create(toolsPath, [])
         let parsed = loader.LoadSln path
         
@@ -25,9 +25,11 @@ module ProjectSystem =
         |> Seq.toList
 
     let getTargetProjects (path: string) =
-        if path.EndsWith(".sln") then loadSolution path
-        elif path.EndsWith(".fsproj") then loadProjects [path]
-        else 
+        match path with
+        | _ when path.EndsWith(".sln") || path.EndsWith(".slnx") -> loadSolution path
+        | _ when path.EndsWith(".fsproj") -> loadProjects [path]
+        | _ when File.Exists(path) -> []
+        | _ -> 
             let projs = Directory.GetFiles(path, "*.fsproj", SearchOption.AllDirectories)
             if projs.Length = 0 then []
-            else loadProjects (projs |> Array.toList)
+            else projs |> Array.toList |> loadProjects
