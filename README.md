@@ -4,6 +4,20 @@
 
 ---
 
+## ⚡ The Gist (TL;DR)
+
+FsAssay bridges the gap between **compilable F#** and **idiomatic, architecture-compliant F#**:
+
+- 🤖 **For AI Coding Agents**: Compiles ≠ Admissible. FsAssay catches C#-shaped code generation (mutability, `null`, unguarded `Option.get`, exception control-flow) and feeds deterministic `--fix` remediations back into the agent repair loop.
+- 👤 **For Human Developers**: Acts as an automated senior F# architect, helping C#/Java engineers master Discriminated Unions, records, total functions, and domain modeling.
+- 🏛 **Profile-Gated Boundaries**: Enforces zero-tolerance functional purity in domain cores (`core`) while permitting boundary interop (`interop`, `shell`, `script`).
+
+> 📖 **A Skill is the textbook. FsAssay is the examiner.**  
+> ⚙️ **The Compiler asks:** *"Does this compile?"*  
+> 🧪 **FsAssay asks:** *"Did the candidate code follow the functional architecture this repository intended?"*
+
+---
+
 ## 🧭 The 5W1H of FsAssay
 
 | Question | Enterprise Real-World Answer |
