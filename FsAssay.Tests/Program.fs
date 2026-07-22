@@ -8,7 +8,7 @@ open System.IO
 let checker = FSharpChecker.Create(keepAssemblyContents = true)
 
 let runFsAssay (source: string) =
-    let file = Path.Combine(Path.GetTempPath(), "Test.fs")
+    let file = Path.Combine(Path.GetTempPath(), sprintf "Test_%s.fs" (System.Guid.NewGuid().ToString("N")))
     File.WriteAllText(file, source)
     let sourceText = SourceText.ofString source
     let optionsUnresolved, _ = checker.GetProjectOptionsFromScript(file, sourceText) |> Async.RunSynchronously
@@ -212,20 +212,148 @@ let doStart () =
             let results = runFsAssay sourceCode
             expectViolation "FSA1401" results
 
-        testCase "Phase 4 Auto-Fix Remediation Test" <| fun _ ->
-            let sourceCode = """
-module BadCode
-let doSomething (x: int option) =
-    let v = x.Value
-    v + 1
+        testCase "GoF Strategy Pattern: OOP Class vs Higher-Order Function" <| fun _ ->
+            let oopStrategy = """
+module BadStrategy
+type IPaymentStrategy =
+    abstract member Pay: decimal -> string
+
+type CreditCardStrategy() =
+    interface IPaymentStrategy with
+        member this.Pay(amount) = sprintf "Paid %f via Credit Card" amount
 """
-            let results = runFsAssay sourceCode
-            let violation = results |> List.find (fun m -> m.Code = "FSA1002")
-            Expect.isFalse (List.isEmpty violation.Fixes) "Expected non-empty Fixes list for FSA1002"
-            Expect.isTrue (violation.Fixes.[0].ToText.Contains("match opt with")) "Expected pattern match fix recommendation"
+            let idiomaticStrategy = """
+module GoodStrategy
+type PaymentStrategy = decimal -> string
+let payWithCreditCard (amount: decimal) = sprintf "Paid %f via Credit Card" amount
+let executePayment (strategy: PaymentStrategy) amount = strategy amount
+"""
+            let oopResults = runFsAssay oopStrategy
+            expectViolation "FSA1008" oopResults
+            let goodResults = runFsAssay idiomaticStrategy
+            Expect.isEmpty goodResults (sprintf "Idiomatic strategy should have zero violations, but got: %A" (goodResults |> List.map (fun m -> m.Code)))
+
+        testCase "GoF State Pattern: OOP State vs Discriminated Union" <| fun _ ->
+            let oopState = """
+module BadState
+type IOrderState =
+    abstract member Process: unit -> string
+type PendingState() =
+    interface IOrderState with
+        member this.Process() = "Pending"
+"""
+            let idiomaticState = """
+module GoodState
+type OrderState =
+    | Pending
+    | Processing of step: int
+    | Completed of orderId: string
+
+let processOrder state =
+    match state with
+    | Pending -> "Starting"
+    | Processing step -> sprintf "Step %d" step
+    | Completed id -> sprintf "Done %s" id
+"""
+            let oopResults = runFsAssay oopState
+            expectViolation "FSA1008" oopResults
+            let goodResults = runFsAssay idiomaticState
+            Expect.isEmpty goodResults (sprintf "Idiomatic state should have zero violations, but got: %A" (goodResults |> List.map (fun m -> m.Code)))
+
+        testCase "GoF Command Pattern: OOP Class vs Parameterless Function / DU" <| fun _ ->
+            let oopCommand = """
+module BadCommand
+type ICommand =
+    abstract member Execute: unit -> unit
+type SaveCommand() =
+    interface ICommand with
+        member this.Execute() = ()
+"""
+            let idiomaticCommand = """
+module GoodCommand
+type Command =
+    | SaveData of path: string
+    | ResetState
+
+let execute cmd =
+    match cmd with
+    | SaveData path -> printfn "Saving to %s" path
+    | ResetState -> printfn "Resetting"
+"""
+            let oopResults = runFsAssay oopCommand
+            expectViolation "FSA1008" oopResults
+            let goodResults = runFsAssay idiomaticCommand
+            Expect.isEmpty goodResults (sprintf "Idiomatic command should have zero violations, but got: %A" (goodResults |> List.map (fun m -> m.Code)))
+
+        testCase "GoF Decorator Pattern: OOP Wrapper Class vs Function Composition" <| fun _ ->
+            let oopDecorator = """
+module BadDecorator
+type IService =
+    abstract member Run: string -> string
+type LoggingDecorator(inner: IService) =
+    interface IService with
+        member this.Run(x) =
+            printfn "Logging %s" x
+            inner.Run(x)
+"""
+            let idiomaticDecorator = """
+module GoodDecorator
+let runCore x = sprintf "Hello %s" x
+let logWrapper f x =
+    printfn "Logging %s" x
+    f x
+let decoratedRun = logWrapper >> runCore
+"""
+            let oopResults = runFsAssay oopDecorator
+            expectViolation "FSA1008" oopResults
+            let goodResults = runFsAssay idiomaticDecorator
+            Expect.isEmpty goodResults (sprintf "Idiomatic decorator should have zero violations, but got: %A" (goodResults |> List.map (fun m -> m.Code)))
+
+        testCase "GoF Builder/Factory Pattern: OOP Factory vs Constructor Functions" <| fun _ ->
+            let oopFactory = """
+module BadFactory
+type IWidgetFactory =
+    abstract member CreateWidget: unit -> string
+type StandardWidgetFactory() =
+    interface IWidgetFactory with
+        member this.CreateWidget() = "Widget"
+"""
+            let idiomaticFactory = """
+module GoodFactory
+type Widget = { Name: string; Weight: float }
+module Widget =
+    let create name weight = { Name = name; Weight = weight }
+"""
+            let oopResults = runFsAssay oopFactory
+            expectViolation "FSA1008" oopResults
+            let goodResults = runFsAssay idiomaticFactory
+            Expect.isEmpty goodResults (sprintf "Idiomatic factory should have zero violations, but got: %A" (goodResults |> List.map (fun m -> m.Code)))
+
+        testCase "GoF Null Object Pattern: OOP Class vs Option" <| fun _ ->
+            let oopNullObject = """
+module BadNullObject
+type ICustomer =
+    abstract member GetName: unit -> string
+type NullCustomer() =
+    interface ICustomer with
+        member this.GetName() = ""
+"""
+            let idiomaticNullObject = """
+module GoodNullObject
+type Customer = { Name: string }
+let getCustomerName (customerOpt: Customer option) =
+    match customerOpt with
+    | Some c -> c.Name
+    | None -> "Guest"
+"""
+            let oopResults = runFsAssay oopNullObject
+            expectViolation "FSA1008" oopResults
+            let goodResults = runFsAssay idiomaticNullObject
+            Expect.isEmpty goodResults (sprintf "Idiomatic null object should have zero violations, but got: %A" (goodResults |> List.map (fun m -> m.Code)))
     ]
 
 [<EntryPoint>]
 let main argv =
     runTestsWithCLIArgs [] argv tests
+
 

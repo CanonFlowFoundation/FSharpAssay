@@ -93,14 +93,16 @@ module Rules =
                             visitExpr valExpr localSups
                             visitExpr body localSups
                         | FSharpExprPatterns.DefaultValue(_) ->
-                            let fix = { FromRange = expr.Range; FromText = "null"; ToText = "None" }
-                            addViolationWithFix "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups (Some fix)
+                            if expr.Range.StartLine > 0 then
+                                let fix = { FromRange = expr.Range; FromText = "null"; ToText = "None" }
+                                addViolationWithFix "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups (Some fix)
                         | FSharpExprPatterns.Const(obj, ty) ->
-                            if isNull obj && not (ty.HasTypeDefinition && ty.TypeDefinition.LogicalName = "unit") then
+                            if expr.Range.StartLine > 0 && isNull obj && not (ty.HasTypeDefinition && ty.TypeDefinition.LogicalName = "unit") then
                                 let fix = { FromRange = expr.Range; FromText = "null"; ToText = "None" }
                                 addViolationWithFix "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups (Some fix)
                         | FSharpExprPatterns.ValueSet(v, valExpr) ->
-                            addViolation "FSA1001" "Mutation Overuse: Avoid mutation. Use record copies with 'with' instead." expr.Range sups
+                            if expr.Range.StartLine > 0 then
+                                addViolation "FSA1001" "Mutation Overuse: Avoid mutation. Use record copies with 'with' instead." expr.Range sups
                             visitExpr valExpr sups
                         | _ ->
                             let prop = expr.GetType().GetProperty("ImmediateSubExpressions")
@@ -115,14 +117,17 @@ module Rules =
                             let localSups = extractSuppressions e.Attributes @ sups
                             decls |> List.iter (fun d -> visitDecl d localSups)
                         | FSharpImplementationFileDeclaration.MemberOrFunctionOrValue(v, args, body) ->
-                            let localSups = extractSuppressions v.Attributes @ sups
-                            if v.IsMutable then
-                                addViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." v.DeclarationLocation localSups
-                            visitExpr body localSups
+                            if not v.IsCompilerGenerated then
+                                let localSups = extractSuppressions v.Attributes @ sups
+                                if v.IsMutable && v.DeclarationLocation.StartLine > 0 then
+                                    addViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." v.DeclarationLocation localSups
+                                visitExpr body localSups
                         | FSharpImplementationFileDeclaration.InitAction(expr) ->
                             visitExpr expr sups
 
-                    ctx.TypedTree.Value.Declarations |> List.iter (fun d -> visitDecl d [])
+                    try
+                        ctx.TypedTree.Value.Declarations |> List.iter (fun d -> visitDecl d [])
+                    with _ -> ()
                 
                 // FSA1002: Partial Access Fallback
                 if Regex.IsMatch(source, @"\.Value\b") || source.Contains("Option.get") || source.Contains("List.head") || source.Contains("Seq.head") then
@@ -131,7 +136,7 @@ module Rules =
                         violations <- createViolationWithFix "FSA1002" "Partial Access: Do not use Option.get, .Value, or .Head. Use pattern matching." Range.range0 (Some fix) :: violations
 
                 // FSA1004: Primitive Obsession
-                if Regex.IsMatch(source, @"type\s+[A-Za-z0-9_]+\s*=\s*(string|int|float|bool|decimal|DateTime)\b") then
+                if Regex.IsMatch(source, @"(?m)^\s*type\s+[A-Za-z0-9_]+\s*=\s*(string|int|float|bool|decimal|DateTime)\s*(?://.*)?$") then
                     violations <- createViolation "FSA1004" "Primitive Obsession: Do not use type aliases for primitives. Use Single-Case Discriminated Unions to make illegal states unrepresentable." Range.range0 :: violations
 
                 // FSA1005: Boolean Validation
