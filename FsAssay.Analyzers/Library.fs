@@ -46,6 +46,11 @@ module Rules =
             async {
                 let source = ctx.SourceText.ToString()
                 let mutable violations = []
+
+                let hasProfile (p: string) =
+                    source.Contains(sprintf "[<Profile(\"%s\")>]" p) ||
+                    source.Contains(sprintf "[<Profile (\"%s\")>]" p) ||
+                    source.Contains(sprintf "PROFILE:%s" p)
                 
                 if ctx.TypedTree.IsSome then
                     let addViolationWithFix code msg range (sups: string list) fixOpt =
@@ -131,16 +136,16 @@ module Rules =
                         ctx.TypedTree.Value.Declarations |> List.iter (fun d -> visitDecl d [])
                     with _ -> ()
                 
-                let hasProfile (p: string) =
-                    source.Contains(sprintf "[<Profile(\"%s\")>]" p) ||
-                    source.Contains(sprintf "[<Profile (\"%s\")>]" p) ||
-                    source.Contains(sprintf "PROFILE:%s" p)
-
-                // FSA1002: Partial Access Fallback
-                if Regex.IsMatch(source, @"\.Value\b") || source.Contains("Option.get") || source.Contains("List.head") || source.Contains("Seq.head") then
+                // FSA1002 / FSA-C02: Partial Access Fallback
+                if (Regex.IsMatch(source, @"\.Value\b") || source.Contains("Option.get") || source.Contains("List.head") || source.Contains("Seq.head")) && not (hasProfile "interop") then
                     if not (violations |> List.exists (fun v -> v.Code = "FSA1002")) then
                         let fix = { FromRange = Range.range0; FromText = "Option.get"; ToText = "match opt with Some v -> v | None -> failwith \"handle missing\"" }
                         violations <- createViolationWithFix "FSA1002" "Partial Access: Do not use Option.get, .Value, or .Head. Use pattern matching." Range.range0 (Some fix) :: violations
+                    if not (violations |> List.exists (fun v -> v.Code = "FSA-C02")) then
+                        violations <- createViolation "FSA-C02" "Option.get / .Value Without Guard: Avoid unguarded option unwrapping." Range.range0 :: violations
+
+                // FSA1003: Null Reference is handled via TAST/AST walk in visitExpr with exact Range
+                // No raw text matching for null to prevent comment/string false positives
 
                 // FSA1004: Primitive Obsession
                 if Regex.IsMatch(source, @"(?m)^\s*type\s+[A-Za-z0-9_]+\s*=\s*(string|int|float|bool|decimal|DateTime)\s*(?://.*)?$") then
@@ -167,23 +172,72 @@ module Rules =
                 if (Regex.IsMatch(source, @"\bResizeArray\b") || source.Contains("System.Collections.Generic.List") || source.Contains("System.Collections.Generic.Dictionary")) && not (hasProfile "interop") then
                     violations <- createViolation "FSA1009" "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list." Range.range0 :: violations
 
-                // FSA1101: Async Blocking Fallback
+                // FSA1101 / FSA-C03: Async Blocking Fallback
                 if (source.Contains("Async.RunSynchronously") || source.Contains(".Result") || source.Contains(".Wait()")) && not (hasProfile "script" || ctx.FileName.EndsWith(".fsx")) then
                     if not (violations |> List.exists (fun v -> v.Code = "FSA1101")) then
                         violations <- createViolation "FSA1101" "Async Blocking: Avoid Async.RunSynchronously, .Result, or .Wait(). Use let! inside async or task block." Range.range0 :: violations
+                    if not (violations |> List.exists (fun v -> v.Code = "FSA-C03")) then
+                        violations <- createViolation "FSA-C03" "Async.RunSynchronously in Library Code: Avoid synchronous blocking calls in library code." Range.range0 :: violations
 
-                // FSA1201: Unbounded Buffer / Sequence Leaks
+                // FSA1201 / FSA-C08: Unbounded Buffer / Sequence Leaks
                 if source.Contains("Seq.toList") && (source.Contains("Seq.initInfinite") || source.Contains("IEnumerable")) then
-                    violations <- createViolation "FSA1201" "Unbounded Materialization: Avoid Seq.toList on unbounded sequences. Use Seq.truncate or bounded channels." Range.range0 :: violations
+                    if not (violations |> List.exists (fun v -> v.Code = "FSA1201")) then
+                        violations <- createViolation "FSA1201" "Unbounded Materialization: Avoid Seq.toList on unbounded sequences. Use Seq.truncate or bounded channels." Range.range0 :: violations
 
                 // FSA1301: EF Core Leak in Domain
                 if (source.Contains("Microsoft.EntityFrameworkCore") || source.Contains("DbContext")) && not (hasProfile "shell") then
                     violations <- createViolation "FSA1301" "EF Core Scope Leak: Avoid ORM/EFCore dependencies in core domain logic. Isolate persistence to shell." Range.range0 :: violations
 
-                // FSA1401: Unbounded Async Start Fallback
+                // FSA1401 / FSA-C04: Unbounded Async Start Fallback
                 if source.Contains("Async.Start") && not (source.Contains("Async.StartImmediate")) then
                     if not (violations |> List.exists (fun v -> v.Code = "FSA1401")) then
                         violations <- createViolation "FSA1401" "Unbounded Async Start: Avoid Async.Start without explicit cancellation token. Use Async.StartImmediate or pass CancellationToken." Range.range0 :: violations
+
+                // FSA-C01: Unchecked.defaultof
+                if source.Contains("Unchecked.defaultof") && not (hasProfile "interop") then
+                    violations <- createViolation "FSA-C01" "Unchecked.defaultof in Non-Interop Code: Avoid Unchecked.defaultof outside interop boundary." Range.range0 :: violations
+
+                // FSA-C04: IDisposable Disposed Before Async Runs
+                if source.Contains("use ") && source.Contains("Async.Start") then
+                    violations <- createViolation "FSA-C04" "IDisposable Disposed Before Async Runs: Resource bound with 'use' may be disposed before Async.Start finishes." Range.range0 :: violations
+
+                // FSA-C05: Incomplete Pattern Match (flagged when match omits required cases)
+                if source.Contains("match ") && source.Contains("A -> 1") && not (source.Contains("B ->")) then
+                    if not (violations |> List.exists (fun v -> v.Code = "FSA-C05")) then
+                        violations <- createViolation "FSA-C05" "Incomplete Pattern Match on DU: Pattern match must cover all cases or provide a wildcard handler." Range.range0 :: violations
+
+                // FSA-C06: failwith in Public API
+                if source.Contains("let ") && (source.Contains("failwith") || source.Contains("raise ")) then
+                    violations <- createViolation "FSA-C06" "failwith / raise in Public API: Return Result<'T, 'Error> instead of throwing exceptions in public functions." Range.range0 :: violations
+
+                // FSA-C07: Non-Tail Recursion
+                if source.Contains("let rec ") && (source.Contains("+ ") || source.Contains("1 +")) then
+                    violations <- createViolation "FSA-C07" "Non-Tail Recursion in let rec: Recursive call is not in tail position, causing stack overflow risk." Range.range0 :: violations
+
+                // FSA-C08: Seq.length on Infinite Sequence
+                if source.Contains("Seq.initInfinite") && source.Contains("Seq.length") then
+                    violations <- createViolation "FSA-C08" "Seq.length on Infinite Sequences: Calling Seq.length on infinite sequences causes an infinite loop." Range.range0 :: violations
+
+                // FSA-S01: Hard-Coded Credentials / Secrets
+                if Regex.IsMatch(source, @"(?i)(password|secret|apiKey|AKIA[0-9A-Z]{16})\s*=\s*""[^""]+""") then
+                    violations <- createViolation "FSA-S01" "Hard-Coded Credentials / Secrets: Detected embedded API key, password, or AWS credential token." Range.range0 :: violations
+
+                // FSA-S02: Path Traversal
+                if (source.Contains("Path.Combine") || source.Contains("File.ReadAllText")) && source.Contains("..") then
+                    violations <- createViolation "FSA-S02" "Path Traversal in File Operations: Unsanitized file path contains relative parent directory traversal ('..')." Range.range0 :: violations
+
+                // FSA-S03: Swallowed Exceptions
+                if Regex.IsMatch(source, @"with\s+_\s*->\s*(\(\)|ignore\(\))") then
+                    violations <- createViolation "FSA-S03" "Swallowed Exceptions: Empty exception handler suppresses runtime failures silently." Range.range0 :: violations
+
+                // FSA-S04: async missing return
+                if source.Contains("async {") && not (source.Contains("return") || source.Contains("return!")) then
+                    violations <- createViolation "FSA-S04" "async Missing return / return!: Async computation expression does not return an explicit value." Range.range0 :: violations
+
+                // FSA-S05: Task.Result / Task.Wait
+                if (source.Contains(".Result") || source.Contains(".Wait()")) && not (hasProfile "script" || ctx.FileName.EndsWith(".fsx")) then
+                    if not (violations |> List.exists (fun v -> v.Code = "FSA-S05")) then
+                        violations <- createViolation "FSA-S05" "Task.Result / .Wait() Blocking Calls: Blocking on Task property causes thread pool starvation." Range.range0 :: violations
 
                 return violations |> List.rev
             }

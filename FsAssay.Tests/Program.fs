@@ -458,11 +458,123 @@ let secondBad () =
             let domainSource = File.ReadAllText("/root/fsharp/FsAssay.Runner/Domain.fs")
             let results = runFsAssay domainSource
             Expect.isEmpty results "FsAssay's own Domain.fs must pass its own audit with zero violations"
+
+        testCase "FSA-C01: Unchecked.defaultof in Non-Interop Code" <| fun _ ->
+            let sourceCode = """
+module BadDefault
+let doDefault () = Unchecked.defaultof<int>
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C01" results
+
+        testCase "FSA-C02: Option.get / .Value Without Guard" <| fun _ ->
+            let sourceCode = """
+module BadOpt
+let getVal (x: int option) = x.Value
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C02" results
+
+        testCase "FSA-C03: Async.RunSynchronously in Library Code" <| fun _ ->
+            let sourceCode = """
+module BadLibrary
+let run () = Async.RunSynchronously (async { return 1 })
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C03" results
+
+        testCase "FSA-C04: IDisposable Disposed Before Async Runs" <| fun _ ->
+            let sourceCode = """
+module BadDispose
+open System.IO
+let leak () =
+    use ms = new MemoryStream()
+    Async.Start (async { return () })
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C04" results
+
+        testCase "FSA-C05: Incomplete Pattern Match on DU" <| fun _ ->
+            let sourceCode = """
+module BadMatch
+type MyDU = A | B
+let test x = match x with A -> 1
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C05" results
+
+        testCase "FSA-C06: failwith / raise in Public API" <| fun _ ->
+            let sourceCode = """
+module BadPublicApi
+let publicFunction x = if x < 0 then failwith "invalid" else x
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C06" results
+
+        testCase "FSA-C07: Non-Tail Recursion in let rec" <| fun _ ->
+            let sourceCode = """
+module BadRec
+let rec sum n = if n <= 0 then 0 else 1 + sum (n - 1)
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C07" results
+
+        testCase "FSA-C08: Seq.length on Infinite Sequences" <| fun _ ->
+            let sourceCode = """
+module BadInfinite
+let getLen () = Seq.initInfinite (fun i -> i) |> Seq.length
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C08" results
+
+        testCase "FSA-S01: Hard-Coded Credentials / Secrets" <| fun _ ->
+            let sourceCode = """
+module BadSecret
+let apiKey = "AKIAIOSFODNN7EXAMPLE"
+let secretKey = "password=SuperSecretPassword123"
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-S01" results
+
+        testCase "FSA-S02: Path Traversal in File Operations" <| fun _ ->
+            let sourceCode = """
+module BadPath
+open System.IO
+let readFile userPath = File.ReadAllText(Path.Combine("/var/data", "../secret.txt"))
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-S02" results
+
+        testCase "FSA-S03: Swallowed Exceptions" <| fun _ ->
+            let sourceCode = """
+module BadSwallow
+let doSwallow () = try failwith "err" with _ -> ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-S03" results
+
+        testCase "FSA-S04: async Missing return / return!" <| fun _ ->
+            let sourceCode = """
+module BadAsync
+let asyncNoReturn () = async { printfn "hello" }
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-S04" results
+
+        testCase "FSA-S05: Task.Result / .Wait() Blocking Calls" <| fun _ ->
+            let sourceCode = """
+module BadTask
+open System.Threading.Tasks
+let block (t: Task<int>) = t.Result
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-S05" results
     ]
 
 [<EntryPoint>]
 let main argv =
     runTestsWithCLIArgs [] argv tests
+
 
 
 
