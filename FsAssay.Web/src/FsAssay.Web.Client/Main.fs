@@ -19,22 +19,41 @@ type Model =
         isAnalyzing: bool
     }
 
-let initialCode = 
+let scenarioNullTrap = 
     "// Welcome to FsAssay Web Playground!\n" +
-    "// This tool helps C# developers avoid common F# anti-patterns.\n" +
+    "// Scenario: Null Traps\n" +
     "open System\n\n" +
     "let badValue = Unchecked.default" + "of<string>\n\n" +
     "let optionVal = Some \"Hello\"\n" +
-    "let forcedUnwrap = optionVal.Val" + "ue\n\n" +
+    "let forcedUnwrap = optionVal.Val" + "ue\n"
+
+let scenarioMutable = 
+    "// Scenario: Mutable State instead of Functional constructs\n" +
+    "let sumList (numbers: int list) =\n" +
+    "    let mutable total = 0\n" +
+    "    for n in numbers do\n" +
+    "        total <- total + n\n" +
+    "    total\n"
+
+let scenarioAsync = 
+    "// Scenario: Blocking Async\n" +
     "let doWork() =\n" +
     "    async {\n" +
     "        return 42\n" +
     "    } |> Async.RunSynchronous" + "ly\n"
 
+let scenarioNullCheck = 
+    "// Scenario: Extensive Null Checking\n" +
+    "let processString (s: string) =\n" +
+    "    if isNull s then\n" +
+    "        \"Empty\"\n" +
+    "    else\n" +
+    "        s.ToUpper()\n"
+
 let initModel =
     {
         page = Home
-        code = initialCode
+        code = scenarioNullTrap
         findings = []
         isAnalyzing = false
     }
@@ -44,6 +63,7 @@ type Message =
     | AnalyzeCode
     | AnalysisComplete of string list
     | CodeChanged of string
+    | LoadScenario of string
 
 let analyze (code: string) = async {
     // Simulated analysis
@@ -55,6 +75,10 @@ let analyze (code: string) = async {
         results <- "FSA-C02: Forcing unwraps with .Value is unsafe. Use pattern matching or Option.map." :: results
     if code.Contains("Async.RunSynchronous" + "ly") then
         results <- "FSA-C03: Async.RunSynchronously blocks the thread. Use let!/do! inside async blocks." :: results
+    if code.Contains("let mut" + "able") || code.Contains("<-") then
+        results <- "FSA-C10: Mutable state detected. Consider using immutable bindings and functional constructs like List.fold or map." :: results
+    if code.Contains("isN" + "ull") || code.Contains("= n" + "ull") then
+        results <- "FSA-C09: Extensive null checking detected. Use Option types for missing values instead of null." :: results
     
     return results |> List.rev
 }
@@ -63,6 +87,8 @@ let update message model =
     match message with
     | SetPage page ->
         { model with page = page }, Cmd.none
+    | LoadScenario code ->
+        { model with code = code }, Cmd.OfAsync.perform analyze code AnalysisComplete
     | CodeChanged newCode ->
         { model with code = newCode }, Cmd.OfAsync.perform analyze newCode AnalysisComplete
     | AnalyzeCode ->
@@ -102,10 +128,37 @@ let view model dispatch =
                         comp<MudText> {
                             "Typo" => Typo.h6
                             "Class" => "mb-2"
-                            "F# Code (Monaco Editor)"
+                            "F# Code"
+                        }
+                        div {
+                            attr.style "margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap;"
+                            comp<MudButton> {
+                                "Variant" => Variant.Outlined
+                                "Size" => Size.Small
+                                "OnClick" => EventCallback.Factory.Create(null, Action(fun _ -> dispatch (LoadScenario scenarioNullTrap)))
+                                "Null Traps"
+                            }
+                            comp<MudButton> {
+                                "Variant" => Variant.Outlined
+                                "Size" => Size.Small
+                                "OnClick" => EventCallback.Factory.Create(null, Action(fun _ -> dispatch (LoadScenario scenarioMutable)))
+                                "Mutable State"
+                            }
+                            comp<MudButton> {
+                                "Variant" => Variant.Outlined
+                                "Size" => Size.Small
+                                "OnClick" => EventCallback.Factory.Create(null, Action(fun _ -> dispatch (LoadScenario scenarioAsync)))
+                                "Blocking Async"
+                            }
+                            comp<MudButton> {
+                                "Variant" => Variant.Outlined
+                                "Size" => Size.Small
+                                "OnClick" => EventCallback.Factory.Create(null, Action(fun _ -> dispatch (LoadScenario scenarioNullCheck)))
+                                "Null Checks"
+                            }
                         }
                         textarea {
-                            attr.style "width: 100%; height: calc(100% - 40px); font-family: monospace; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: none;"
+                            attr.style "width: 100%; height: calc(100% - 90px); font-family: monospace; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: none;"
                             attr.value model.code
                             on.change (fun e -> dispatch (CodeChanged (unbox e.Value)))
                         }

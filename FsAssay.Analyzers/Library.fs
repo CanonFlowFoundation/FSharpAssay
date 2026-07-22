@@ -8,7 +8,7 @@ open System
 module Rules =
 
     type Rule = 
-        | FSAC01 | FSAC02 | FSAC03 | FSAC04 | FSAC05 | FSAC06 | FSAC07 | FSAC08
+        | FSAC01 | FSAC02 | FSAC03 | FSAC04 | FSAC05 | FSAC06 | FSAC07 | FSAC08 | FSAC09 | FSAC10
         | FSAS01 | FSAS02 | FSAS03 | FSAS04 | FSAS05
         with
             member this.Code = 
@@ -21,6 +21,8 @@ module Rules =
                 | FSAC06 -> "FSA-C06"
                 | FSAC07 -> "FSA-C07"
                 | FSAC08 -> "FSA-C08"
+                | FSAC09 -> "FSA-C09"
+                | FSAC10 -> "FSA-C10"
                 | FSAS01 -> "FSA-S01"
                 | FSAS02 -> "FSA-S02"
                 | FSAS03 -> "FSA-S03"
@@ -37,6 +39,8 @@ module Rules =
                 | FSAC06 -> "failwith / invalidArg / raise in Public API"
                 | FSAC07 -> "Non-Tail Recursion in let rec"
                 | FSAC08 -> "Seq.length on Infinite Sequences"
+                | FSAC09 -> "Null Checking (isNull / = null) Instead of Option"
+                | FSAC10 -> "Mutable State Instead of Functional Constructs"
                 | FSAS01 -> "Hard-Coded Credentials / Secrets"
                 | FSAS02 -> "Path Traversal in File Operations"
                 | FSAS03 -> "Swallowed Exceptions"
@@ -127,6 +131,10 @@ module Rules =
                         let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
                         if text.Contains("use ") then
                             if not (isSuppressed currentSups "FSA-C04") then f <- f @ (mkLocated FSAC04 expr.Range |> Option.toList)
+                    if logicalName = "isNull" || logicalName = "op_Equality" then
+                        let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
+                        if text.Contains("isNull") || text.Contains("null") then
+                            if not (isSuppressed currentSups "FSA-C09") then f <- f @ (mkLocated FSAC09 expr.Range |> Option.toList)
                     f
                 
                 let objFindings = match obj with | Some o -> visitExpr o currentSups | None -> []
@@ -166,7 +174,8 @@ module Rules =
                 f
 
             | FSharpExprPatterns.ValueSet(v, valExpr) ->
-                visitExpr valExpr currentSups
+                let f = if not (isSuppressed currentSups "FSA-C10") then mkLocated FSAC10 expr.Range |> Option.toList else []
+                f @ visitExpr valExpr currentSups
 
             | FSharpExprPatterns.Application(func, _, args) ->
                 visitExpr func currentSups @ List.collect (fun a -> visitExpr a currentSups) args
