@@ -8,12 +8,14 @@ module Config =
         severities: Map<string, string>
         exclude: string[]
         targetGrade: string
+        profile: string
     }
 
     let defaultConfig = {
         severities = Map.empty
         exclude = [| "**/obj/**"; "**/bin/**"; "**/AssemblyAttributes.fs" |]
         targetGrade = "A"
+        profile = "core"
     }
 
     let loadConfig (targetPath: string) =
@@ -27,3 +29,4 @@ module Config =
                 Option.ofObj loaded |> Option.defaultValue defaultConfig
             with _ -> defaultConfig
         else defaultConfig
+

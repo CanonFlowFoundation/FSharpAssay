@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FsAssay.Analyzers\FsAssay.Analyzers.fsproj" />
+    <ProjectReference Include="..\FsAssay.Runner\FsAssay.Runner.fsproj" />
   </ItemGroup>
 
 </Project>
