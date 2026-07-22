@@ -413,11 +413,57 @@ let domainLogic () =
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA1001" results
+
+        testCase "Qwen Scrutiny: Clean Idiomatic F# produces ZERO violations" <| fun _ ->
+            let sourceCode = """
+module CleanDomain
+type Email = Email of string
+type Order = { Id: string; Total: decimal }
+let processOrder (order: Order) : Result<Order, string> =
+    if order.Total > 0.0m then Ok order else Error "Invalid total"
+"""
+            let results = runFsAssay sourceCode
+            Expect.isEmpty results "Clean idiomatic F# domain logic must produce zero violations"
+
+        testCase "Qwen Scrutiny: Comments & String Literals containing keywords do NOT trigger violations" <| fun _ ->
+            let sourceCode = """
+module SafeLiterals
+// This data structure is immutable, not mutable
+// We do not return null here, null is not allowed
+let doc = "Warning: while loops and Option.get are not recommended"
+"""
+            let results = runFsAssay sourceCode
+            let fsa1001 = results |> List.filter (fun m -> m.Code = "FSA1001")
+            let fsa1003 = results |> List.filter (fun m -> m.Code = "FSA1003")
+            Expect.isEmpty fsa1001 "Comment containing 'mutable' must not trigger FSA1001"
+            Expect.isEmpty fsa1003 "Comment or string containing 'null' must not trigger FSA1003"
+
+        testCase "Qwen Scrutiny: Exact source locations & multiple violations granularity" <| fun _ ->
+            let sourceCode = """
+module MultiBad
+let firstBad () =
+    let mutable a = 1
+    a <- 2
+let secondBad () =
+    let mutable b = 3
+    b <- 4
+"""
+            let results = runFsAssay sourceCode
+            let fsa1001List = results |> List.filter (fun m -> m.Code = "FSA1001")
+            Expect.isTrue (fsa1001List.Length >= 2) "Multiple mutable violations in the same file must be reported individually"
+            for v in fsa1001List do
+                Expect.isTrue (v.Range.StartLine > 0) "Violation Range must report actual line number (> 0), not range0 / line 0"
+
+        testCase "Qwen Scrutiny: Dogfooding FsAssay own source code" <| fun _ ->
+            let domainSource = File.ReadAllText("/root/fsharp/FsAssay.Runner/Domain.fs")
+            let results = runFsAssay domainSource
+            Expect.isEmpty results "FsAssay's own Domain.fs must pass its own audit with zero violations"
     ]
 
 [<EntryPoint>]
 let main argv =
     runTestsWithCLIArgs [] argv tests
+
 
 
 
