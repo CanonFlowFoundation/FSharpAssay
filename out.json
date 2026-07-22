@@ -26,14 +26,6 @@
       {
         "code": "FSA2017",
         "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
-        "startLine": 54,
-        "startColumn": 25,
-        "endLine": 54,
-        "endColumn": 32
-      },
-      {
-        "code": "FSA2017",
-        "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
         "startLine": 55,
         "startColumn": 25,
         "endLine": 55,
@@ -43,8 +35,16 @@
         "code": "FSA2017",
         "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
         "startLine": 56,
-        "startColumn": 29,
+        "startColumn": 25,
         "endLine": 56,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA2017",
+        "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
+        "startLine": 57,
+        "startColumn": 29,
+        "endLine": 57,
         "endColumn": 36
       },
       {
@@ -53,7 +53,23 @@
         "startLine": 34,
         "startColumn": 64,
         "endLine": 34,
-        "endColumn": 1188
+        "endColumn": 1234
+      },
+      {
+        "code": "FSA-C01",
+        "message": "Unchecked Default Value: Avoid Unchecked.defaultof in domain logic.",
+        "startLine": 33,
+        "startColumn": 46,
+        "endLine": 33,
+        "endColumn": 65
+      },
+      {
+        "code": "FSA-C01",
+        "message": "Unchecked Default Value: Avoid Unchecked.defaultof in domain logic.",
+        "startLine": 71,
+        "startColumn": 42,
+        "endLine": 71,
+        "endColumn": 61
       }
     ]
   },
@@ -309,6 +325,22 @@
         "startColumn": 8,
         "endLine": 53,
         "endColumn": 593
+      },
+      {
+        "code": "FSA-C03",
+        "message": "Synchronous Async Run: Avoid Async.RunSynchronously in library code.",
+        "startLine": 83,
+        "startColumn": 78,
+        "endLine": 83,
+        "endColumn": 100
+      },
+      {
+        "code": "FSA-C03",
+        "message": "Synchronous Async Run: Avoid Async.RunSynchronously in library code.",
+        "startLine": 84,
+        "startColumn": 74,
+        "endLine": 84,
+        "endColumn": 96
       }
     ]
   },
@@ -766,121 +798,121 @@
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 176,
+        "startLine": 177,
         "startColumn": 28,
-        "endLine": 176,
+        "endLine": 177,
         "endColumn": 38
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 184,
+        "startLine": 185,
         "startColumn": 24,
-        "endLine": 184,
+        "endLine": 185,
         "endColumn": 82
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 186,
+        "startLine": 187,
         "startColumn": 28,
-        "endLine": 186,
+        "endLine": 187,
         "endColumn": 40
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 247,
+        "startLine": 248,
         "startColumn": 32,
-        "endLine": 247,
+        "endLine": 248,
         "endColumn": 72
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 251,
+        "startLine": 252,
         "startColumn": 32,
-        "endLine": 251,
+        "endLine": 252,
         "endColumn": 72
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 266,
+        "startLine": 267,
         "startColumn": 28,
-        "endLine": 266,
+        "endLine": 267,
         "endColumn": 41
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 269,
+        "startLine": 270,
         "startColumn": 20,
-        "endLine": 269,
+        "endLine": 270,
         "endColumn": 73
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 273,
+        "startLine": 274,
         "startColumn": 36,
-        "endLine": 273,
+        "endLine": 274,
         "endColumn": 43
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 275,
+        "startLine": 276,
         "startColumn": 28,
-        "endLine": 275,
+        "endLine": 276,
         "endColumn": 50
       },
       {
         "code": "FSA1005",
         "message": "Parse, Don\u0027t Validate: Functions should return Result\u003CParsedType, Error\u003E rather than a boolean validity flag.",
-        "startLine": 179,
+        "startLine": 180,
         "startColumn": 20,
-        "endLine": 179,
+        "endLine": 180,
         "endColumn": 36
       },
       {
         "code": "FSA1007",
         "message": "Imperative Loops: Avoid \u0027while\u0027 loops. Use Seq.fold or recursion.",
-        "startLine": 274,
+        "startLine": 275,
         "startColumn": 24,
-        "endLine": 274,
+        "endLine": 275,
         "endColumn": 29
       },
       {
         "code": "FSA2014",
         "message": "Imperative Accumulation: Mutable accumulator with loop detected.",
-        "startLine": 266,
+        "startLine": 267,
         "startColumn": 16,
-        "endLine": 266,
+        "endLine": 267,
         "endColumn": 65
       },
       {
         "code": "FSA2014",
         "message": "Imperative Accumulation: Mutable accumulator with loop detected.",
-        "startLine": 273,
+        "startLine": 274,
         "startColumn": 24,
-        "endLine": 273,
+        "endLine": 274,
         "endColumn": 77
       },
       {
         "code": "FSA2016",
         "message": "Unsafe Cast: Runtime cast detected. Model alternatives as a DU.",
-        "startLine": 236,
+        "startLine": 237,
         "startColumn": 75,
-        "endLine": 236,
+        "endLine": 237,
         "endColumn": 78
       },
       {
         "code": "FSA2017",
         "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
-        "startLine": 234,
+        "startLine": 235,
         "startColumn": 51,
-        "endLine": 234,
+        "endLine": 235,
         "endColumn": 61
       },
       {
@@ -890,6 +922,62 @@
         "startColumn": 16,
         "endLine": 26,
         "endColumn": 5011
+      },
+      {
+        "code": "FSA-S03",
+        "message": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected.",
+        "startLine": 202,
+        "startColumn": 32,
+        "endLine": 202,
+        "endColumn": 44
+      },
+      {
+        "code": "FSA-S03",
+        "message": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected.",
+        "startLine": 221,
+        "startColumn": 32,
+        "endLine": 221,
+        "endColumn": 44
+      },
+      {
+        "code": "FSA-S03",
+        "message": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected.",
+        "startLine": 228,
+        "startColumn": 32,
+        "endLine": 228,
+        "endColumn": 44
+      },
+      {
+        "code": "FSA-S03",
+        "message": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected.",
+        "startLine": 240,
+        "startColumn": 32,
+        "endLine": 240,
+        "endColumn": 44
+      },
+      {
+        "code": "FSA-S03",
+        "message": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected.",
+        "startLine": 241,
+        "startColumn": 24,
+        "endLine": 241,
+        "endColumn": 36
+      },
+      {
+        "code": "FSA-S03",
+        "message": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected.",
+        "startLine": 258,
+        "startColumn": 24,
+        "endLine": 258,
+        "endColumn": 36
+      },
+      {
+        "code": "FSA-S03",
+        "message": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected.",
+        "startLine": 262,
+        "startColumn": 20,
+        "endLine": 262,
+        "endColumn": 32
       }
     ]
   }

@@ -168,6 +168,7 @@ module Rules =
     [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA2017")>]
     [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA2018")>]
     [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA2024")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-S03")>]
     let antiPatternAnalyzer : Analyzer<CliContext> =
         fun ctx ->
             async {
@@ -307,6 +308,14 @@ module Rules =
                 checkRegex "FSA2027" "Stringly Error Channel: Result returning a primitive string error. Use a domain error DU." @"Result<[^,]+,\s*string>" RegexOptions.None
                 checkRegex "FSA2028" "Static Class as Module: C#-style static class detected. Use an F# module." @"\[<AbstractClass[^>]*Sealed[^>]*>\]\s*type" RegexOptions.None
                 checkRegex "FSA2030" "Manual Dispose: Explicit .Dispose() call detected. Use the 'use' keyword instead." @"\b[A-Za-z0-9_]+\.Dispose\(\)" RegexOptions.None
+
+                // SOTA Agentic AI Guardrail Rules (Tier 1 Correctness & Tier 2 Suspicious)
+                checkRegex "FSA-C01" "Unchecked Default Value: Avoid Unchecked.defaultof in domain logic." @"Unchecked\.defaultof" RegexOptions.None
+                checkRegex "FSA-C03" "Synchronous Async Run: Avoid Async.RunSynchronously in library code." @"Async\.RunSynchronously" RegexOptions.None
+                checkRegex "FSA-C04" "Disposed Before Async Run: IDisposable resource disposed before async workflow starts." @"use\s+[A-Za-z0-9_]+\s*=\s*new.*Async\.Start" RegexOptions.Singleline
+                checkRegex "FSA-S01" "Hard-Coded Secrets: Sensitive API keys or credentials detected in source." @"(password|apiKey|api_key|secret|connectionString)\s*=\s*""[^""]+""|""(sk_live_[A-Za-z0-9]+|AKIA[A-Z0-9]{16})""" RegexOptions.IgnoreCase
+                checkRegex "FSA-S03" "Swallowed Exception: Empty catch block 'try ... with _ -> ()' detected." @"with\s*_\s*->\s*\(\)" RegexOptions.None
+                checkRegex "FSA-S05" "Task Blocking Call: Avoid Task.Result or Task.Wait() in asynchronous code." @"\.(Result|Wait\(\))" RegexOptions.None
 
                 return violations |> List.rev
             }

@@ -1,11 +1,11 @@
 # 🧪 FsAssay F# Code Quality Rate Card
 
-**Timestamped Report:** `2026-07-22 02:29:27 UTC`
+**Timestamped Report:** `2026-07-22 03:40:27 UTC`
 **Target Repos / Scanned Files:** 9 file(s)
 
 ## 🏆 Overall Code Base Rating
 
-> ### Grade: **[F] Hostile / Worst Anti-Patterns** — Score: `4 / 100`
+> ### Grade: **[F] Hostile / Worst Anti-Patterns** — Score: `0 / 100`
 > *Purity Level: Worst. C# code translated to F# syntax with nulls, exceptions, and procedural mutation.*
 
 ---
@@ -23,11 +23,11 @@
 | File Path | Violations | Rating Tier |
 | :--- | :--- | :--- |
 | `/root/FSharpAssay/FsAssay.Runner/AutoFix.fs` | 2 | **[B] Hybrid / Acceptable F#** |
-| `/root/FSharpAssay/FsAssay.Runner/Orchestrator.fs` | 4 | **[C] C#-in-F# Smell (Bad)** |
+| `/root/FSharpAssay/FsAssay.Runner/Orchestrator.fs` | 6 | **[C] C#-in-F# Smell (Bad)** |
 | `/root/FSharpAssay/FsAssay.Runner/Output.fs` | 12 | **[F] Hostile / Worst Anti-Patterns** |
 | `/root/FSharpAssay/FsAssay.Runner/Server.fs` | 5 | **[C] C#-in-F# Smell (Bad)** |
-| `/root/FSharpAssay/FsAssay.Runner/Program.fs` | 13 | **[F] Hostile / Worst Anti-Patterns** |
-| `/root/FSharpAssay/FsAssay.Analyzers/Library.fs` | 72 | **[F] Hostile / Worst Anti-Patterns** |
+| `/root/FSharpAssay/FsAssay.Runner/Program.fs` | 15 | **[F] Hostile / Worst Anti-Patterns** |
+| `/root/FSharpAssay/FsAssay.Analyzers/Library.fs` | 79 | **[F] Hostile / Worst Anti-Patterns** |
 
 ## 🛠️ Actionable Remediation Guidance
 

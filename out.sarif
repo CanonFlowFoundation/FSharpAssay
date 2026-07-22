@@ -53,27 +53,6 @@
                 },
                 "region": {
                   "endColumn": 33,
-                  "endLine": 54,
-                  "startColumn": 26,
-                  "startLine": 54
-                }
-              }
-            }
-          ],
-          "message": {
-            "text": "Reflection-Based Dispatch: Runtime type inspection used for dispatch."
-          },
-          "ruleId": "FSA2017"
-        },
-        {
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "file:///root/FSharpAssay/FsAssay.Runner/Orchestrator.fs"
-                },
-                "region": {
-                  "endColumn": 33,
                   "endLine": 55,
                   "startColumn": 26,
                   "startLine": 55
@@ -94,9 +73,9 @@
                   "uri": "file:///root/FSharpAssay/FsAssay.Runner/Orchestrator.fs"
                 },
                 "region": {
-                  "endColumn": 37,
+                  "endColumn": 33,
                   "endLine": 56,
-                  "startColumn": 30,
+                  "startColumn": 26,
                   "startLine": 56
                 }
               }
@@ -115,7 +94,28 @@
                   "uri": "file:///root/FSharpAssay/FsAssay.Runner/Orchestrator.fs"
                 },
                 "region": {
-                  "endColumn": 1189,
+                  "endColumn": 37,
+                  "endLine": 57,
+                  "startColumn": 30,
+                  "startLine": 57
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Reflection-Based Dispatch: Runtime type inspection used for dispatch."
+          },
+          "ruleId": "FSA2017"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Runner/Orchestrator.fs"
+                },
+                "region": {
+                  "endColumn": 1235,
                   "endLine": 34,
                   "startColumn": 65,
                   "startLine": 34
@@ -127,6 +127,48 @@
             "text": "Option Constellation: Multiple optional fields detected. Represent states with a DU."
           },
           "ruleId": "FSA2026"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Runner/Orchestrator.fs"
+                },
+                "region": {
+                  "endColumn": 66,
+                  "endLine": 33,
+                  "startColumn": 47,
+                  "startLine": 33
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Unchecked Default Value: Avoid Unchecked.defaultof in domain logic."
+          },
+          "ruleId": "FSA-C01"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Runner/Orchestrator.fs"
+                },
+                "region": {
+                  "endColumn": 62,
+                  "endLine": 71,
+                  "startColumn": 43,
+                  "startLine": 71
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Unchecked Default Value: Avoid Unchecked.defaultof in domain logic."
+          },
+          "ruleId": "FSA-C01"
         },
         {
           "locations": [
@@ -757,6 +799,48 @@
             "text": "Option Constellation: Multiple optional fields detected. Represent states with a DU."
           },
           "ruleId": "FSA2026"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Runner/Program.fs"
+                },
+                "region": {
+                  "endColumn": 101,
+                  "endLine": 83,
+                  "startColumn": 79,
+                  "startLine": 83
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Synchronous Async Run: Avoid Async.RunSynchronously in library code."
+          },
+          "ruleId": "FSA-C03"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Runner/Program.fs"
+                },
+                "region": {
+                  "endColumn": 97,
+                  "endLine": 84,
+                  "startColumn": 75,
+                  "startLine": 84
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Synchronous Async Run: Avoid Async.RunSynchronously in library code."
+          },
+          "ruleId": "FSA-C03"
         },
         {
           "locations": [
@@ -1943,9 +2027,9 @@
                 },
                 "region": {
                   "endColumn": 39,
-                  "endLine": 176,
+                  "endLine": 177,
                   "startColumn": 29,
-                  "startLine": 176
+                  "startLine": 177
                 }
               }
             }
@@ -1964,9 +2048,9 @@
                 },
                 "region": {
                   "endColumn": 83,
-                  "endLine": 184,
+                  "endLine": 185,
                   "startColumn": 25,
-                  "startLine": 184
+                  "startLine": 185
                 }
               }
             }
@@ -1985,9 +2069,9 @@
                 },
                 "region": {
                   "endColumn": 41,
-                  "endLine": 186,
+                  "endLine": 187,
                   "startColumn": 29,
-                  "startLine": 186
+                  "startLine": 187
                 }
               }
             }
@@ -2006,9 +2090,9 @@
                 },
                 "region": {
                   "endColumn": 73,
-                  "endLine": 247,
+                  "endLine": 248,
                   "startColumn": 33,
-                  "startLine": 247
+                  "startLine": 248
                 }
               }
             }
@@ -2027,9 +2111,9 @@
                 },
                 "region": {
                   "endColumn": 73,
-                  "endLine": 251,
+                  "endLine": 252,
                   "startColumn": 33,
-                  "startLine": 251
+                  "startLine": 252
                 }
               }
             }
@@ -2048,9 +2132,9 @@
                 },
                 "region": {
                   "endColumn": 42,
-                  "endLine": 266,
+                  "endLine": 267,
                   "startColumn": 29,
-                  "startLine": 266
+                  "startLine": 267
                 }
               }
             }
@@ -2069,9 +2153,9 @@
                 },
                 "region": {
                   "endColumn": 74,
-                  "endLine": 269,
+                  "endLine": 270,
                   "startColumn": 21,
-                  "startLine": 269
+                  "startLine": 270
                 }
               }
             }
@@ -2090,9 +2174,9 @@
                 },
                 "region": {
                   "endColumn": 44,
-                  "endLine": 273,
+                  "endLine": 274,
                   "startColumn": 37,
-                  "startLine": 273
+                  "startLine": 274
                 }
               }
             }
@@ -2111,9 +2195,9 @@
                 },
                 "region": {
                   "endColumn": 51,
-                  "endLine": 275,
+                  "endLine": 276,
                   "startColumn": 29,
-                  "startLine": 275
+                  "startLine": 276
                 }
               }
             }
@@ -2132,9 +2216,9 @@
                 },
                 "region": {
                   "endColumn": 37,
-                  "endLine": 179,
+                  "endLine": 180,
                   "startColumn": 21,
-                  "startLine": 179
+                  "startLine": 180
                 }
               }
             }
@@ -2153,9 +2237,9 @@
                 },
                 "region": {
                   "endColumn": 30,
-                  "endLine": 274,
+                  "endLine": 275,
                   "startColumn": 25,
-                  "startLine": 274
+                  "startLine": 275
                 }
               }
             }
@@ -2174,9 +2258,9 @@
                 },
                 "region": {
                   "endColumn": 66,
-                  "endLine": 266,
+                  "endLine": 267,
                   "startColumn": 17,
-                  "startLine": 266
+                  "startLine": 267
                 }
               }
             }
@@ -2195,9 +2279,9 @@
                 },
                 "region": {
                   "endColumn": 78,
-                  "endLine": 273,
+                  "endLine": 274,
                   "startColumn": 25,
-                  "startLine": 273
+                  "startLine": 274
                 }
               }
             }
@@ -2216,9 +2300,9 @@
                 },
                 "region": {
                   "endColumn": 79,
-                  "endLine": 236,
+                  "endLine": 237,
                   "startColumn": 76,
-                  "startLine": 236
+                  "startLine": 237
                 }
               }
             }
@@ -2237,9 +2321,9 @@
                 },
                 "region": {
                   "endColumn": 62,
-                  "endLine": 234,
+                  "endLine": 235,
                   "startColumn": 52,
-                  "startLine": 234
+                  "startLine": 235
                 }
               }
             }
@@ -2269,6 +2353,153 @@
             "text": "Missed Active Pattern: Complex if/elif chains detected. Consider an Active Pattern."
           },
           "ruleId": "FSA2024"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 45,
+                  "endLine": 202,
+                  "startColumn": 33,
+                  "startLine": 202
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected."
+          },
+          "ruleId": "FSA-S03"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 45,
+                  "endLine": 221,
+                  "startColumn": 33,
+                  "startLine": 221
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected."
+          },
+          "ruleId": "FSA-S03"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 45,
+                  "endLine": 228,
+                  "startColumn": 33,
+                  "startLine": 228
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected."
+          },
+          "ruleId": "FSA-S03"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 45,
+                  "endLine": 240,
+                  "startColumn": 33,
+                  "startLine": 240
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected."
+          },
+          "ruleId": "FSA-S03"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 241,
+                  "startColumn": 25,
+                  "startLine": 241
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected."
+          },
+          "ruleId": "FSA-S03"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 37,
+                  "endLine": 258,
+                  "startColumn": 25,
+                  "startLine": 258
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected."
+          },
+          "ruleId": "FSA-S03"
+        },
+        {
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///root/FSharpAssay/FsAssay.Analyzers/Library.fs"
+                },
+                "region": {
+                  "endColumn": 33,
+                  "endLine": 262,
+                  "startColumn": 21,
+                  "startLine": 262
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Swallowed Exception: Empty catch block \u0027try ... with _ -\u003E ()\u0027 detected."
+          },
+          "ruleId": "FSA-S03"
         }
       ],
       "tool": {

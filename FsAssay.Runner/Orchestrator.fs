@@ -45,6 +45,7 @@ module Orchestrator =
     }
 
     [<SuppressMessage("FsAssay", "FSA2017")>]
+    [<SuppressMessage("FsAssay", "FSA-C01")>]
     let evaluateSingleFile (file: string) = async {
         if not (File.Exists(file)) then return Skipped UnrelatedFile
         else
