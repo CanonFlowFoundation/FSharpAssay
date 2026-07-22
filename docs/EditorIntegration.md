@@ -1,38 +1,73 @@
-# Editor Integration Guide
+# 🎨 VS Code & Ionide Editor Integration Guide
 
-FSharpAssay uses `FSharp.Analyzers.SDK` to execute its elite functional-only rules against the F# Typed Syntax Tree (TAST). Since this SDK is an ecosystem standard, you can integrate FSharpAssay directly into your IDE to get live, real-time squiggles for rules like `FSA1001` (Mutation Overuse) and `FSA1003` (Null Reference).
+> **FsAssay leverages `FSharp.Analyzers.SDK` (the F# ecosystem standard) to deliver real-time, in-editor diagnostics and code squiggles directly inside VS Code and Ionide.**
 
-## Ionide (VS Code)
+---
 
-Ionide natively supports `FSharp.Analyzers.SDK`.
+## ⚡ Live Editor Diagnostics Architecture
 
-1. **Build the Analyzer**: First, build `FsAssay.Analyzers`.
-   ```bash
-   dotnet build FsAssay.Analyzers -c Release
-   ```
-2. **Configure Settings**: Open or create `.vscode/settings.json` in your repository and point the analyzer path to the built DLL's directory.
-   ```json
-   {
-       "FSharp.enableAnalyzers": true,
-       "FSharp.analyzersPath": [
-           "./FsAssay.Analyzers/bin/Release/net10.0"
-       ]
-   }
-   ```
-3. **Restart Ionide**: Reload your VS Code window. The elite F# anti-patterns will now highlight natively as errors in your editor.
+```mermaid
+flowchart LR
+    A["Developer Edits .fs File"] --> B["Ionide Language Server (LSP)"]
+    B --> C["FSharp.Compiler.Service (FCS) TAST"]
+    C --> D["FsAssay.Analyzers Engine"]
+    D --> E["Real-Time VS Code Squiggles & Fixes"]
+```
 
-## JetBrains Rider
+---
 
-Rider also ships with built-in support for `FSharp.Analyzers.SDK`.
+## 🚀 Step-by-Step VS Code Setup
 
-1. **Enable Analyzers**: 
-   Navigate to `Preferences | Editor | Inspection Settings | F# | Analyzers`.
-2. **Enable SDK Analyzers**: Ensure "Enable F# Analyzers" is checked.
-3. **Add Path**: Add the path to the compiled `FsAssay.Analyzers.dll` directory in the analyzer path list.
-4. **Restart**: Restart Rider. Violations will surface natively within the inspection panel and as inline squiggles.
+### 1. Install Ionide Extension
+Install the official **[Ionide-fsharp](https://marketplace.visualstudio.com/items?itemName=Ionide.Ionide-fsharp)** extension in VS Code.
 
-## Suppressions
+### 2. Build the Analyzer Assembly
+Build `FsAssay.Analyzers` in Debug or Release mode:
+```bash
+dotnet build FsAssay.Analyzers -c Release
+```
 
-Both IDEs respect the `FsAssay` suppression mechanisms built into the TAST slice:
-- `[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA1001")>]`
-- `[<Profile("interop")>]` (Automatically suppresses `FSA1001` and `FSA1003` in the applied scope).
+### 3. Repository Configuration (`.vscode/settings.json`)
+Ensure `.vscode/settings.json` points to your compiled `FsAssay.Analyzers.dll` directory:
+
+```json
+{
+    "FSharp.enableAnalyzers": true,
+    "FSharp.analyzersPath": [
+        "./FsAssay.Analyzers/bin/Debug/net10.0",
+        "./FsAssay.Analyzers/bin/Release/net10.0"
+    ],
+    "FSharp.smartIndent": true,
+    "FSharp.pipelineHints.enabled": true,
+    "editor.formatOnSave": true,
+    "[fsharp]": {
+        "editor.defaultFormatter": "Ionide.Ionide-fsharp",
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true
+    }
+}
+```
+
+### 4. Reload VS Code
+Run `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) -> **Developer: Reload Window**.
+
+Ionide will automatically load `FsAssay.Analyzers.dll`. As you type, violations like `FSA1001` (Mutation Overuse), `FSA1002` (Partial Access), `FSA-C01` (Unchecked.defaultof), and `FSA-S01` (Hard-coded Credentials) will highlight natively with red/yellow squiggles in your code editor!
+
+---
+
+## 🛠 VS Code Command Tasks (`Ctrl+Shift+B`)
+
+FsAssay comes configured with VS Code workspace tasks in `.vscode/tasks.json`:
+- **`dotnet: build`**: Builds the entire solution (`Ctrl+Shift+B`).
+- **`FsAssay: Audit Solution`**: Runs full static analysis across all files.
+- **`FsAssay: Auto-Fix Remediations`**: Displays `--fix` recommendations.
+- **`FsAssay: Run Expecto Test Suite`**: Executes the 43-test Expecto test suite.
+
+---
+
+## 🛡️ Profile-Gated Suppressions in VS Code
+
+Suppressions apply dynamically inside the editor:
+- **`[<Profile("interop")>]`**: Suppresses mutation and null squiggles on C# boundary methods.
+- **`[<Profile("shell")>]`**: Suppresses EF Core scope leak squiggles on infrastructure layers.
+- **`[<Profile("script")>]`**: Suppresses loop and synchronous blocking squiggles in `.fsx` files.
