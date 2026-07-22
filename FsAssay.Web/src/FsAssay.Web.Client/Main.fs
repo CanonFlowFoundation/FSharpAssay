@@ -67,7 +67,6 @@ type Message =
 
 let analyze (code: string) = async {
     // Simulated analysis
-    do! Async.Sleep 500
     let mutable results = []
     if code.Contains("Unchecked.default" + "of") then
         results <- "FSA-C01: Unchecked.defaultof is a null trap. Use Option instead." :: results
@@ -99,9 +98,9 @@ let update message model =
 let view model dispatch =
     div {
         attr.style "display: flex; flex-direction: column; height: 100vh; background-color: #f5f5f5;"
-        comp<MudThemeProvider> { }
-        comp<MudDialogProvider> { }
-        comp<MudSnackbarProvider> { }
+        comp<MudThemeProvider> { attr.empty() }
+        comp<MudDialogProvider> { attr.empty() }
+        comp<MudSnackbarProvider> { attr.empty() }
         
         comp<MudAppBar> {
             "Color" => Color.Primary
@@ -132,28 +131,29 @@ let view model dispatch =
                         }
                         div {
                             attr.style "margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap;"
+                            let receiver = obj()
                             comp<MudButton> {
                                 "Variant" => Variant.Outlined
                                 "Size" => Size.Small
-                                "OnClick" => EventCallback.Factory.Create(null, Action(fun _ -> dispatch (LoadScenario scenarioNullTrap)))
+                                "OnClick" => EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(receiver, System.Action<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(fun _ -> dispatch (LoadScenario scenarioNullTrap)))
                                 "Null Traps"
                             }
                             comp<MudButton> {
                                 "Variant" => Variant.Outlined
                                 "Size" => Size.Small
-                                "OnClick" => EventCallback.Factory.Create(null, Action(fun _ -> dispatch (LoadScenario scenarioMutable)))
+                                "OnClick" => EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(receiver, System.Action<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(fun _ -> dispatch (LoadScenario scenarioMutable)))
                                 "Mutable State"
                             }
                             comp<MudButton> {
                                 "Variant" => Variant.Outlined
                                 "Size" => Size.Small
-                                "OnClick" => EventCallback.Factory.Create(null, Action(fun _ -> dispatch (LoadScenario scenarioAsync)))
+                                "OnClick" => EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(receiver, System.Action<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(fun _ -> dispatch (LoadScenario scenarioAsync)))
                                 "Blocking Async"
                             }
                             comp<MudButton> {
                                 "Variant" => Variant.Outlined
                                 "Size" => Size.Small
-                                "OnClick" => EventCallback.Factory.Create(null, Action(fun _ -> dispatch (LoadScenario scenarioNullCheck)))
+                                "OnClick" => EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(receiver, System.Action<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(fun _ -> dispatch (LoadScenario scenarioNullCheck)))
                                 "Null Checks"
                             }
                         }
@@ -223,4 +223,4 @@ type MyApp() =
     inherit ProgramComponent<Model, Message>()
 
     override this.Program =
-        Program.mkProgram (fun _ -> initModel, Cmd.ofMsg AnalyzeCode) update view
+        Program.mkProgram (fun _ -> initModel, Cmd.none) update view

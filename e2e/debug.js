@@ -6,15 +6,16 @@ const { chromium } = require('playwright');
     
     page.on('console', msg => console.log('LOG:', msg.text()));
     page.on('pageerror', error => console.log('ERROR:', error.message));
-    page.on('response', response => {
-        console.log('RESPONSE:', response.status(), response.url());
-    });
+    page.on('requestfailed', request =>
+      console.log('REQUEST FAILED:', request.url(), request.failure()?.errorText)
+    );
     
     console.log('Navigating...');
-    await page.goto('https://canonflowfoundation.github.io/FSharpAssay/');
+    await page.goto('https://canonflowfoundation.github.io/FSharpAssay/', { waitUntil: 'networkidle' });
     
     try {
-        await page.waitForSelector('text=F# Code', { timeout: 30000 });
+        await page.waitForSelector('text=F# Code', { timeout: 15000 });
+        console.log("SUCCESS!");
     } catch (e) {
         console.log('Timeout. Current content:');
         console.log(await page.content());
