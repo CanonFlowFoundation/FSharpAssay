@@ -8,24 +8,27 @@ module AutoFix =
         if not (File.Exists(file)) || List.isEmpty violations then 0
         else
             let lines = File.ReadAllLines(file)
-            let mutable fixedCount = 0
+            
+            let applyFixOnLine (line: string) (code: string) =
+                match code with
+                | "FSA1001" when line.Contains("let mutable ") -> line.Replace("let mutable ", "let "), true
+                | "FSA1003" when line.Contains(" = null") -> line.Replace(" = null", " = None"), true
+                | "FSA1003" when line.Contains("null") -> line.Replace("null", "None"), true
+                | _ -> line, false
 
-            for v in violations do
-                let lineIdx = max 0 (v.Range.StartLine - 1)
-                if lineIdx < lines.Length then
-                    let line = lines.[lineIdx]
-                    match v.Code with
-                    | "FSA1001" when line.Contains("let mutable ") ->
-                        lines.[lineIdx] <- line.Replace("let mutable ", "let ")
-                        fixedCount <- fixedCount + 1
-                    | "FSA1003" when line.Contains(" = null") ->
-                        lines.[lineIdx] <- line.Replace(" = null", " = None")
-                        fixedCount <- fixedCount + 1
-                    | "FSA1003" when line.Contains("null") ->
-                        lines.[lineIdx] <- line.Replace("null", "None")
-                        fixedCount <- fixedCount + 1
-                    | _ -> ()
+            let (updatedLines, fixesApplied) =
+                violations
+                |> List.fold (fun (currLines: string array, count: int) v ->
+                    let lineIdx = max 0 (v.Range.StartLine - 1)
+                    if lineIdx < currLines.Length then
+                        let (newLine, wasFixed) = applyFixOnLine currLines.[lineIdx] v.Code
+                        if wasFixed then
+                            currLines.[lineIdx] <- newLine
+                            (currLines, count + 1)
+                        else (currLines, count)
+                    else (currLines, count)
+                ) (lines, 0)
 
-            if fixedCount > 0 then
-                File.WriteAllLines(file, lines)
-            fixedCount
+            if fixesApplied > 0 then
+                File.WriteAllLines(file, updatedLines)
+            fixesApplied

@@ -1,459 +1,895 @@
 [
   {
-    "file": "/root/fsharp/FsAssay.Tests/Program.fs",
+    "file": "/root/FSharpAssay/FsAssay.Runner/AutoFix.fs",
     "violations": [
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 26,
+        "code": "FSA2020",
+        "message": "Signature Blindness: Consecutive primitive arguments of the same type detected.",
+        "startLine": 12,
+        "startColumn": 31,
+        "endLine": 12,
+        "endColumn": 60
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 21,
         "startColumn": 24,
-        "endLine": 26,
-        "endColumn": 55
-      },
-      {
-        "code": "FSA1004",
-        "message": "Primitive Obsession: Do not use type aliases for primitives. Use Single-Case Discriminated Unions to make illegal states unrepresentable.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
-      },
-      {
-        "code": "FSA1005",
-        "message": "Parse, Don\u0027t Validate: Functions should return Result\u003CParsedType, Error\u003E rather than a boolean validity flag.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
-      },
-      {
-        "code": "FSA1006",
-        "message": "Generic Catch: Do not catch generic exceptions for flow control. Use Result types instead.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
-      },
-      {
-        "code": "FSA1007",
-        "message": "Imperative Loops: Avoid \u0027while\u0027 loops. Use Seq.fold or recursion.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
-      },
-      {
-        "code": "FSA1008",
-        "message": "OOP Inheritance: Avoid OOP inheritance and interfaces. Use records of functions or Discriminated Unions.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
-      },
-      {
-        "code": "FSA1009",
-        "message": "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
+        "endLine": 21,
+        "endColumn": 35
       }
     ]
   },
   {
-    "file": "/root/fsharp/FsAssay.Analyzers/Library.fs",
+    "file": "/root/FSharpAssay/FsAssay.Runner/Orchestrator.fs",
+    "violations": [
+      {
+        "code": "FSA2017",
+        "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
+        "startLine": 54,
+        "startColumn": 25,
+        "endLine": 54,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA2017",
+        "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
+        "startLine": 55,
+        "startColumn": 25,
+        "endLine": 55,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA2017",
+        "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
+        "startLine": 56,
+        "startColumn": 29,
+        "endLine": 56,
+        "endColumn": 36
+      },
+      {
+        "code": "FSA2026",
+        "message": "Option Constellation: Multiple optional fields detected. Represent states with a DU.",
+        "startLine": 34,
+        "startColumn": 64,
+        "endLine": 34,
+        "endColumn": 1188
+      }
+    ]
+  },
+  {
+    "file": "/root/FSharpAssay/FsAssay.Runner/Output.fs",
+    "violations": [
+      {
+        "code": "FSA2017",
+        "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
+        "startLine": 125,
+        "startColumn": 18,
+        "endLine": 125,
+        "endColumn": 25
+      },
+      {
+        "code": "FSA2020",
+        "message": "Signature Blindness: Consecutive primitive arguments of the same type detected.",
+        "startLine": 40,
+        "startColumn": 24,
+        "endLine": 40,
+        "endColumn": 63
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 53,
+        "startColumn": 20,
+        "endLine": 53,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 77,
+        "startColumn": 20,
+        "endLine": 77,
+        "endColumn": 34
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 131,
+        "startColumn": 46,
+        "endLine": 131,
+        "endColumn": 58
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 153,
+        "startColumn": 40,
+        "endLine": 153,
+        "endColumn": 52
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 154,
+        "startColumn": 39,
+        "endLine": 154,
+        "endColumn": 51
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 155,
+        "startColumn": 40,
+        "endLine": 155,
+        "endColumn": 52
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 157,
+        "startColumn": 11,
+        "endLine": 157,
+        "endColumn": 148
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 180,
+        "startColumn": 46,
+        "endLine": 180,
+        "endColumn": 58
+      },
+      {
+        "code": "FSA2023",
+        "message": "Nested Function Application: Deep nesting detected. Consider using the |\u003E operator.",
+        "startLine": 186,
+        "startColumn": 20,
+        "endLine": 186,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA2026",
+        "message": "Option Constellation: Multiple optional fields detected. Represent states with a DU.",
+        "startLine": 70,
+        "startColumn": 8,
+        "endLine": 70,
+        "endColumn": 2536
+      }
+    ]
+  },
+  {
+    "file": "/root/FSharpAssay/FsAssay.Runner/Server.fs",
     "violations": [
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 25,
-        "startColumn": 28,
-        "endLine": 25,
-        "endColumn": 38
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 27,
-        "startColumn": 19,
-        "endLine": 27,
-        "endColumn": 39
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 31,
-        "startColumn": 39,
-        "endLine": 31,
-        "endColumn": 52
+        "startLine": 23,
+        "startColumn": 24,
+        "endLine": 23,
+        "endColumn": 31
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 37,
-        "startColumn": 32,
-        "endLine": 37,
-        "endColumn": 177
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 37,
-        "startColumn": 153,
-        "endLine": 37,
-        "endColumn": 163
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
         "startLine": 32,
-        "startColumn": 28,
-        "endLine": 36,
-        "endColumn": 74
+        "startColumn": 26,
+        "endLine": 32,
+        "endColumn": 42
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 42,
-        "startColumn": 31,
-        "endLine": 42,
+        "code": "FSA1007",
+        "message": "Imperative Loops: Avoid \u0027while\u0027 loops. Use Seq.fold or recursion.",
+        "startLine": 24,
+        "startColumn": 12,
+        "endLine": 24,
+        "endColumn": 17
+      },
+      {
+        "code": "FSA2014",
+        "message": "Imperative Accumulation: Mutable accumulator with loop detected.",
+        "startLine": 23,
+        "startColumn": 12,
+        "endLine": 23,
+        "endColumn": 56
+      },
+      {
+        "code": "FSA2020",
+        "message": "Signature Blindness: Consecutive primitive arguments of the same type detected.",
+        "startLine": 9,
+        "startColumn": 64,
+        "endLine": 9,
+        "endColumn": 93
+      }
+    ]
+  },
+  {
+    "file": "/root/FSharpAssay/FsAssay.Runner/Program.fs",
+    "violations": [
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 71,
+        "startColumn": 24,
+        "endLine": 71,
+        "endColumn": 39
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 72,
+        "startColumn": 24,
+        "endLine": 72,
+        "endColumn": 34
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 73,
+        "startColumn": 24,
+        "endLine": 73,
+        "endColumn": 35
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 74,
+        "startColumn": 24,
+        "endLine": 74,
+        "endColumn": 36
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 80,
+        "startColumn": 20,
+        "endLine": 80,
         "endColumn": 48
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 43,
-        "startColumn": 32,
-        "endLine": 43,
-        "endColumn": 189
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 43,
-        "startColumn": 148,
-        "endLine": 43,
-        "endColumn": 175
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 42,
+        "startLine": 89,
         "startColumn": 28,
-        "endLine": 42,
-        "endColumn": 53
+        "endLine": 89,
+        "endColumn": 82
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 47,
-        "startColumn": 28,
-        "endLine": 47,
-        "endColumn": 172
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 47,
-        "startColumn": 148,
-        "endLine": 47,
-        "endColumn": 158
+        "startLine": 101,
+        "startColumn": 24,
+        "endLine": 101,
+        "endColumn": 56
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 103,
+        "startColumn": 24,
+        "endLine": 103,
+        "endColumn": 54
+      },
+      {
+        "code": "FSA1005",
+        "message": "Parse, Don\u0027t Validate: Functions should return Result\u003CParsedType, Error\u003E rather than a boolean validity flag.",
+        "startLine": 78,
+        "startColumn": 16,
+        "endLine": 78,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1008",
+        "message": "OOP Inheritance: Avoid OOP inheritance and interfaces. Use records of functions or Discriminated Unions.",
+        "startLine": 21,
+        "startColumn": 8,
+        "endLine": 21,
+        "endColumn": 41
+      },
+      {
+        "code": "FSA1009",
+        "message": "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list.",
+        "startLine": 75,
+        "startColumn": 29,
+        "endLine": 75,
+        "endColumn": 40
+      },
+      {
+        "code": "FSA2024",
+        "message": "Missed Active Pattern: Complex if/elif chains detected. Consider an Active Pattern.",
+        "startLine": 55,
+        "startColumn": 12,
+        "endLine": 55,
+        "endColumn": 5078
+      },
+      {
+        "code": "FSA2026",
+        "message": "Option Constellation: Multiple optional fields detected. Represent states with a DU.",
+        "startLine": 53,
+        "startColumn": 8,
+        "endLine": 53,
+        "endColumn": 593
+      }
+    ]
+  },
+  {
+    "file": "/root/FSharpAssay/FsAssay.Analyzers/Library.fs",
+    "violations": [
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
         "startLine": 50,
-        "startColumn": 32,
+        "startColumn": 20,
         "endLine": 50,
-        "endColumn": 176
+        "endColumn": 21
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 50,
-        "startColumn": 152,
-        "endLine": 50,
-        "endColumn": 162
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 51,
+        "startColumn": 20,
+        "endLine": 51,
+        "endColumn": 39
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 49,
-        "startColumn": 28,
-        "endLine": 49,
-        "endColumn": 46
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 52,
+        "startColumn": 20,
+        "endLine": 52,
+        "endColumn": 38
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 53,
+        "startColumn": 20,
+        "endLine": 53,
+        "endColumn": 28
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 54,
+        "startColumn": 20,
+        "endLine": 54,
+        "endColumn": 36
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 55,
+        "startColumn": 20,
+        "endLine": 55,
+        "endColumn": 34
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 56,
+        "startColumn": 20,
+        "endLine": 56,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 57,
+        "startColumn": 20,
+        "endLine": 57,
+        "endColumn": 25
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 52,
-        "startColumn": 28,
-        "endLine": 52,
-        "endColumn": 167
+        "startLine": 65,
+        "startColumn": 20,
+        "endLine": 65,
+        "endColumn": 48
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 52,
-        "startColumn": 143,
-        "endLine": 52,
-        "endColumn": 153
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 68,
+        "startColumn": 16,
+        "endLine": 68,
+        "endColumn": 26
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 58,
-        "startColumn": 32,
-        "endLine": 59,
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 69,
+        "startColumn": 16,
+        "endLine": 69,
+        "endColumn": 26
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 72,
+        "startColumn": 20,
+        "endLine": 72,
+        "endColumn": 64
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 75,
+        "startColumn": 20,
+        "endLine": 75,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 76,
+        "startColumn": 20,
+        "endLine": 76,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 78,
+        "startColumn": 20,
+        "endLine": 78,
+        "endColumn": 64
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 81,
+        "startColumn": 20,
+        "endLine": 81,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 82,
+        "startColumn": 20,
+        "endLine": 82,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 85,
+        "startColumn": 20,
+        "endLine": 85,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 86,
+        "startColumn": 20,
+        "endLine": 86,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 89,
+        "startColumn": 20,
+        "endLine": 89,
+        "endColumn": 43
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 93,
+        "startColumn": 20,
+        "endLine": 93,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 94,
+        "startColumn": 20,
+        "endLine": 94,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 97,
+        "startColumn": 20,
+        "endLine": 97,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 98,
+        "startColumn": 20,
+        "endLine": 98,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 103,
+        "startColumn": 20,
+        "endLine": 103,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 104,
+        "startColumn": 20,
+        "endLine": 104,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 106,
+        "startColumn": 20,
+        "endLine": 106,
+        "endColumn": 45
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 108,
+        "startColumn": 20,
+        "endLine": 108,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 109,
+        "startColumn": 20,
+        "endLine": 109,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 112,
+        "startColumn": 20,
+        "endLine": 112,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 113,
+        "startColumn": 20,
+        "endLine": 113,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 116,
+        "startColumn": 20,
+        "endLine": 116,
+        "endColumn": 37
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 118,
+        "startColumn": 20,
+        "endLine": 118,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 119,
+        "startColumn": 20,
+        "endLine": 119,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 122,
+        "startColumn": 20,
+        "endLine": 122,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 123,
+        "startColumn": 20,
+        "endLine": 123,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 126,
+        "startColumn": 20,
+        "endLine": 126,
         "endColumn": 47
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 56,
-        "startColumn": 28,
-        "endLine": 56,
-        "endColumn": 53
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 129,
+        "startColumn": 20,
+        "endLine": 129,
+        "endColumn": 32
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 66,
-        "startColumn": 31,
-        "endLine": 66,
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 130,
+        "startColumn": 20,
+        "endLine": 130,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 132,
+        "startColumn": 20,
+        "endLine": 132,
+        "endColumn": 43
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 135,
+        "startColumn": 20,
+        "endLine": 135,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 136,
+        "startColumn": 20,
+        "endLine": 136,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 138,
+        "startColumn": 20,
+        "endLine": 138,
         "endColumn": 42
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 67,
-        "startColumn": 32,
-        "endLine": 67,
-        "endColumn": 183
+        "startLine": 142,
+        "startColumn": 20,
+        "endLine": 142,
+        "endColumn": 32
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 67,
-        "startColumn": 148,
-        "endLine": 67,
-        "endColumn": 169
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 143,
+        "startColumn": 20,
+        "endLine": 143,
+        "endColumn": 30
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 66,
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 145,
+        "startColumn": 36,
+        "endLine": 145,
+        "endColumn": 60
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 145,
+        "startColumn": 66,
+        "endLine": 145,
+        "endColumn": 82
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 146,
+        "startColumn": 20,
+        "endLine": 146,
+        "endColumn": 37
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 149,
+        "startColumn": 20,
+        "endLine": 149,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 150,
+        "startColumn": 20,
+        "endLine": 150,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 152,
+        "startColumn": 20,
+        "endLine": 152,
+        "endColumn": 36
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 153,
+        "startColumn": 20,
+        "endLine": 153,
+        "endColumn": 37
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 155,
+        "startColumn": 20,
+        "endLine": 155,
+        "endColumn": 32
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 156,
+        "startColumn": 20,
+        "endLine": 156,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 158,
+        "startColumn": 20,
+        "endLine": 158,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 159,
+        "startColumn": 20,
+        "endLine": 159,
+        "endColumn": 30
+      },
+      {
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 176,
         "startColumn": 28,
-        "endLine": 66,
-        "endColumn": 47
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 72,
-        "startColumn": 20,
-        "endLine": 72,
-        "endColumn": 52
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 72,
-        "startColumn": 20,
-        "endLine": 72,
-        "endColumn": 39
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 72,
-        "startColumn": 20,
-        "endLine": 72,
-        "endColumn": 75
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 27,
-        "startColumn": 16,
-        "endLine": 27,
-        "endColumn": 44
+        "endLine": 176,
+        "endColumn": 38
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 77,
-        "startColumn": 20,
-        "endLine": 77,
-        "endColumn": 226
+        "startLine": 184,
+        "startColumn": 24,
+        "endLine": 184,
+        "endColumn": 82
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 77,
-        "startColumn": 20,
-        "endLine": 77,
-        "endColumn": 226
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 76,
-        "startColumn": 16,
-        "endLine": 76,
-        "endColumn": 119
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 186,
+        "startColumn": 28,
+        "endLine": 186,
+        "endColumn": 40
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 81,
-        "startColumn": 20,
-        "endLine": 81,
-        "endColumn": 198
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 81,
-        "startColumn": 20,
-        "endLine": 81,
-        "endColumn": 198
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 80,
-        "startColumn": 16,
-        "endLine": 80,
-        "endColumn": 108
+        "startLine": 247,
+        "startColumn": 32,
+        "endLine": 247,
+        "endColumn": 72
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 85,
-        "startColumn": 20,
-        "endLine": 85,
-        "endColumn": 179
+        "startLine": 251,
+        "startColumn": 32,
+        "endLine": 251,
+        "endColumn": 72
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 85,
-        "startColumn": 20,
-        "endLine": 85,
-        "endColumn": 179
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 84,
-        "startColumn": 16,
-        "endLine": 84,
-        "endColumn": 136
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 266,
+        "startColumn": 28,
+        "endLine": 266,
+        "endColumn": 41
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 89,
+        "startLine": 269,
         "startColumn": 20,
-        "endLine": 89,
-        "endColumn": 154
+        "endLine": 269,
+        "endColumn": 73
       },
       {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 89,
-        "startColumn": 20,
-        "endLine": 89,
-        "endColumn": 154
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 88,
-        "startColumn": 16,
-        "endLine": 88,
-        "endColumn": 59
+        "code": "FSA1001",
+        "message": "Mutation Overuse: Avoid \u0027mutable\u0027. Use record copies with \u0027with\u0027 instead.",
+        "startLine": 273,
+        "startColumn": 36,
+        "endLine": 273,
+        "endColumn": 43
       },
       {
         "code": "FSA1001",
         "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 93,
-        "startColumn": 20,
-        "endLine": 93,
-        "endColumn": 193
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 93,
-        "startColumn": 20,
-        "endLine": 93,
-        "endColumn": 193
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 92,
-        "startColumn": 16,
-        "endLine": 92,
-        "endColumn": 161
-      },
-      {
-        "code": "FSA1001",
-        "message": "Mutation Overuse: Avoid mutation. Use record copies with \u0027with\u0027 instead.",
-        "startLine": 97,
-        "startColumn": 20,
-        "endLine": 97,
-        "endColumn": 175
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 97,
-        "startColumn": 20,
-        "endLine": 97,
-        "endColumn": 175
-      },
-      {
-        "code": "FSA1003",
-        "message": "Null Reference: Avoid \u0027null\u0027. Use \u0027Option\u0027 types to represent missing values.",
-        "startLine": 96,
-        "startColumn": 16,
-        "endLine": 96,
-        "endColumn": 179
+        "startLine": 275,
+        "startColumn": 28,
+        "endLine": 275,
+        "endColumn": 50
       },
       {
         "code": "FSA1005",
         "message": "Parse, Don\u0027t Validate: Functions should return Result\u003CParsedType, Error\u003E rather than a boolean validity flag.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
-      },
-      {
-        "code": "FSA1006",
-        "message": "Generic Catch: Do not catch generic exceptions for flow control. Use Result types instead.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
+        "startLine": 179,
+        "startColumn": 20,
+        "endLine": 179,
+        "endColumn": 36
       },
       {
         "code": "FSA1007",
         "message": "Imperative Loops: Avoid \u0027while\u0027 loops. Use Seq.fold or recursion.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
+        "startLine": 274,
+        "startColumn": 24,
+        "endLine": 274,
+        "endColumn": 29
       },
       {
-        "code": "FSA1009",
-        "message": "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list.",
-        "startLine": 1,
-        "startColumn": 0,
-        "endLine": 1,
-        "endColumn": 0
+        "code": "FSA2014",
+        "message": "Imperative Accumulation: Mutable accumulator with loop detected.",
+        "startLine": 266,
+        "startColumn": 16,
+        "endLine": 266,
+        "endColumn": 65
+      },
+      {
+        "code": "FSA2014",
+        "message": "Imperative Accumulation: Mutable accumulator with loop detected.",
+        "startLine": 273,
+        "startColumn": 24,
+        "endLine": 273,
+        "endColumn": 77
+      },
+      {
+        "code": "FSA2016",
+        "message": "Unsafe Cast: Runtime cast detected. Model alternatives as a DU.",
+        "startLine": 236,
+        "startColumn": 75,
+        "endLine": 236,
+        "endColumn": 78
+      },
+      {
+        "code": "FSA2017",
+        "message": "Reflection-Based Dispatch: Runtime type inspection used for dispatch.",
+        "startLine": 234,
+        "startColumn": 51,
+        "endLine": 234,
+        "endColumn": 61
+      },
+      {
+        "code": "FSA2024",
+        "message": "Missed Active Pattern: Complex if/elif chains detected. Consider an Active Pattern.",
+        "startLine": 26,
+        "startColumn": 16,
+        "endLine": 26,
+        "endColumn": 5011
       }
     ]
   }

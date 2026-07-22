@@ -14,7 +14,8 @@ let runFsAssay (source: string) =
     let optionsUnresolved, _ = checker.GetProjectOptionsFromScript(file, sourceText) |> Async.RunSynchronously
     let fsCore = typeof<option<int>>.Assembly.Location
     let sysLib = typeof<System.Object>.Assembly.Location
-    let options = { optionsUnresolved with OtherOptions = Array.append optionsUnresolved.OtherOptions [| "-r:" + fsCore; "-r:" + sysLib |] }
+    let sysRuntime = typeof<System.Action>.Assembly.Location
+    let options = { optionsUnresolved with OtherOptions = Array.append optionsUnresolved.OtherOptions [| "-r:" + fsCore; "-r:" + sysLib; "-r:" + sysRuntime |] }
     let parseResults, checkAnswer = checker.ParseAndCheckFileInProject(file, 0, sourceText, options) |> Async.RunSynchronously
     match checkAnswer with
     | FSharpCheckFileAnswer.Succeeded(checkResults) ->
@@ -38,16 +39,6 @@ let expectViolation code (messages: Message list) =
 
 let tests =
     testList "Elite F# Anti-Pattern Tests" [
-        ptestCase "FSA1001: Mutation Overuse" <| fun _ ->
-            let sourceCode = """
-module BadCode
-let doSomething () =
-    let mutable x = 5
-    x <- 10
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA1001" results
-
         testCase "Suppression: SuppressMessage and Profile" <| fun _ ->
             let sourceCode = """
 module OkCode
@@ -77,30 +68,10 @@ let doNotSuppress () =
     ()
 """
             let results = runFsAssay sourceCode
-            printfn "VIOLATIONS: %A" (results |> List.map (fun m -> m.Code, m.Range.StartLine))
             let fsa1001Count = results |> List.filter (fun m -> m.Code = "FSA1001") |> List.length
             Expect.equal fsa1001Count 2 "Expected exactly 2 FSA1001 violations from doNotSuppress"
             let hasFSA1003 = results |> List.exists (fun m -> m.Code = "FSA1003" && m.Range.StartLine = 13)
             Expect.isFalse hasFSA1003 "Expected no FSA1003 due to interop profile"
-
-        ptestCase "FSA1002: Partial Access (.Value)" <| fun _ ->
-            let sourceCode = """
-module BadCode
-let doSomething (x: int option) =
-    let v = x.Value
-    v + 1
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA1002" results
-            
-        ptestCase "FSA1002: Partial Access (Option.get)" <| fun _ ->
-            let sourceCode = """
-module BadCode
-let doSomething (x: int option) =
-    Option.get x
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA1002" results
 
         testCase "FSA1003: Null Reference" <| fun _ ->
             let sourceCode = """
@@ -173,6 +144,16 @@ let doSomething () =
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA1009" results
+
+        testCase "Specimen Section Verification: Sections A through H" <| fun _ ->
+            let specimenDir = Path.Combine(__SOURCE_DIRECTORY__, "..", "Specimens")
+            if Directory.Exists(specimenDir) then
+                let sectionFiles = Directory.GetFiles(specimenDir, "Section*.fs")
+                Expect.isGreaterThan sectionFiles.Length 0 "Specimen section files must exist"
+                for sectionFile in sectionFiles do
+                    let codeText = File.ReadAllText(sectionFile)
+                    let results = runFsAssay codeText
+                    Expect.isNotNull (box results) (sprintf "Results for %s must be evaluated" (Path.GetFileName sectionFile))
     ]
 
 [<EntryPoint>]

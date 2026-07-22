@@ -51,8 +51,21 @@ let main argv =
     
     let executeScan () =
         let optionsList = ProjectSystem.getTargetProjects path
-        if List.isEmpty optionsList then
-            printfn "No projects found."
+        let filesToScan =
+            if List.isEmpty optionsList then
+                if File.Exists(path) && path.EndsWith(".fs") then [ (path, None) ]
+                elif Directory.Exists(path) then
+                    Directory.GetFiles(path, "*.fs", SearchOption.AllDirectories)
+                    |> Array.filter (fun f -> not (f.Contains("obj") || f.Contains("bin")))
+                    |> Array.map (fun f -> (f, None))
+                    |> Array.toList
+                else []
+            else
+                optionsList
+                |> List.collect (fun opts -> opts.SourceFiles |> Array.map (fun f -> (f, Some opts)) |> Array.toList)
+
+        if List.isEmpty filesToScan then
+            printfn "No files found to scan."
             (0, 0, 0, 0, [])
         else
             let mutable totalViolations = 0
@@ -61,31 +74,34 @@ let main argv =
             let mutable skippedFiles = 0
             let allResults = ResizeArray<string * Message list>()
 
-            for options in optionsList do
-                for file in options.SourceFiles do
-                    let isExcluded = config.exclude |> Array.exists (fun pat -> file.Contains(pat.Replace("*", "")))
-                    if not isExcluded && file.EndsWith(".fs") && not (file.Contains("AssemblyAttributes.fs")) && not (file.Contains("AssemblyInfo.fs")) then
-                        totalFiles <- totalFiles + 1
-                        let verdict = Orchestrator.evaluateFile options file |> Async.RunSynchronously
-                        match verdict with
-                        | Completed violations ->
-                            if not (List.isEmpty violations) then
-                                totalViolations <- totalViolations + violations.Length
-                                allResults.Add(file, violations)
-                                if not (results.Contains(Adjudicate)) then
-                                    printfn "\n❌ %s" file
-                                    for v in violations do
-                                        printfn "   └── [%s] %s (Line: %d)" v.Code v.Message v.Range.StartLine
+            for (file, optsOpt) in filesToScan do
+                let isExcluded = config.exclude |> Array.exists (fun pat -> file.Contains(pat.Replace("*", "")))
+                if not isExcluded && file.EndsWith(".fs") && not (file.Contains("AssemblyAttributes.fs")) && not (file.Contains("AssemblyInfo.fs")) then
+                    totalFiles <- totalFiles + 1
+                    let verdict =
+                        match optsOpt with
+                        | Some opts -> Orchestrator.evaluateFile opts file |> Async.RunSynchronously
+                        | None -> Orchestrator.evaluateSingleFile file |> Async.RunSynchronously
 
-                                if results.Contains(Fix) then
-                                    let fixedCount = AutoFix.applyAutoFixes file violations
-                                    if fixedCount > 0 then
-                                        printfn "   ✨ Applied %d auto-fix(es) to %s" fixedCount file
-                        | Skipped reason ->
-                            skippedFiles <- skippedFiles + 1
-                        | Failed fail ->
-                            failedFiles <- failedFiles + 1
-                            printfn "\n💥 Exception in %s: %A" file fail
+                    match verdict with
+                    | Completed violations ->
+                        if not (List.isEmpty violations) then
+                            totalViolations <- totalViolations + violations.Length
+                            allResults.Add(file, violations)
+                            if not (results.Contains(Adjudicate)) then
+                                printfn "\n❌ %s" file
+                                for v in violations do
+                                    printfn "   └── [%s] %s (Line: %d, Col: %d)" v.Code v.Message v.Range.StartLine v.Range.StartColumn
+
+                            if results.Contains(Fix) then
+                                let fixedCount = AutoFix.applyAutoFixes file violations
+                                if fixedCount > 0 then
+                                    printfn "   ✨ Applied %d auto-fix(es) to %s" fixedCount file
+                    | Skipped reason ->
+                        skippedFiles <- skippedFiles + 1
+                    | Failed fail ->
+                        failedFiles <- failedFiles + 1
+                        printfn "\n💥 Exception in %s: %A" file fail
 
             (totalFiles, skippedFiles, failedFiles, totalViolations, List.ofSeq allResults)
 

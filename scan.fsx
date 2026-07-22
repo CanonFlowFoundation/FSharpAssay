@@ -16,24 +16,13 @@ let rec getFiles dir =
     }
 
 let scanFile file =
-    let source = File.ReadAllText(file)
-    let sourceText = SourceText.ofString source
-    let context : CliContext = {
-        FileName = file
-        SourceText = sourceText
-        ParseFileResults = Unchecked.defaultof<_>
-        CheckFileResults = Unchecked.defaultof<_>
-        TypedTree = None
-        CheckProjectResults = Unchecked.defaultof<_>
-        ProjectOptions = Unchecked.defaultof<_>
-        AnalyzerIgnoreRanges = Map.empty
-    }
-    
-    let violations = Rules.antiPatternAnalyzer context |> Async.RunSynchronously
-    if not (List.isEmpty violations) then
+    let verdict = Orchestrator.evaluateSingleFile file |> Async.RunSynchronously
+    match verdict with
+    | Completed violations when not (List.isEmpty violations) ->
         printfn "\n❌ %s" file
         for v in violations do
-            printfn "   └── [%s] %s" v.Code v.Message
+            printfn "   └── [%s] %s (Line %d, Col %d)" v.Code v.Message v.Range.StartLine v.Range.StartColumn
+    | _ -> ()
 
 printfn "Scanning repository: /root/fsharp-realworld"
 getFiles "/root/fsharp-realworld"
