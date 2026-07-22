@@ -11,12 +11,10 @@
   <ItemGroup>
     <PackageReference Include="Bolero" />
     <PackageReference Include="Bolero.Build" />
-    <PackageReference Include="FSharp.Compiler.Service" />
+
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" />
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="BlazorMonaco" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\FsAssay.Analyzers\FsAssay.Analyzers.fsproj" />
-  </ItemGroup>
+
 </Project>
