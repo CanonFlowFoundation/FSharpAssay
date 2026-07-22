@@ -11,7 +11,7 @@ const { chromium } = require('playwright');
     );
     
     console.log('Navigating...');
-    await page.goto('http://localhost:45247/', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:8081/FSharpAssay/', { waitUntil: 'networkidle' });
     
     try {
         await page.waitForSelector('text=F# Code', { timeout: 15000 });

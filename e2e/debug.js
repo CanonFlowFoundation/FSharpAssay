@@ -14,7 +14,7 @@ const { chromium } = require('playwright');
     await page.goto('https://canonflowfoundation.github.io/FSharpAssay/', { waitUntil: 'networkidle' });
     
     try {
-        await page.waitForSelector('text=F# Code', { timeout: 15000 });
+        await page.waitForSelector('text=F# Code', { timeout: 60000 });
         console.log("SUCCESS!");
     } catch (e) {
         console.log('Timeout. Current content:');
