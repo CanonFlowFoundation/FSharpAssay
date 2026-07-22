@@ -4,48 +4,118 @@
 
 ---
 
-## 💡 Dual Audience Value Proposition
+## 🧭 The 5W1H of FsAssay
 
-FsAssay serves as an advanced design critic valuable to both human engineers and AI coding agents by establishing a clear 3-tier boundary:
-
-```
-                  ┌──────────────────────────────────────────────┐
-                  │              Verification (P0)               │
-                  │   Deterministic defects that block builds    │
-                  └──────────────────────┬───────────────────────┘
-                                         │
-                  ┌──────────────────────▼───────────────────────┐
-                  │          Architecture Guidance (P1)          │
-                  │  Contextual findings (core, shell, interop)  │
-                  └──────────────────────┬───────────────────────┘
-                                         │
-                  ┌──────────────────────▼───────────────────────┐
-                  │                 Learning (P2)                │
-                  │  Heuristic suggestions to teach functional F#│
-                  └──────────────────────────────────────────────┘
-```
-
-### 👤 For Human F# Developers
-- **Accelerates C#/Java Transition**: Helps OOP developers master idiomatic F# patterns quickly.
-- **Deep Design Critic**: Explains *why* Discriminated Unions, records, total functions, and explicit `Result` error channels are superior to OOP class hierarchies.
-- **Domain Modeling Opportunities**: Identifies primitive obsession, boolean flag validation, and stringly-typed error risks.
-- **Beyond Linting**: Delivers a deep "functional-first" architectural review far beyond basic code formatting or style linting.
-
-### 🤖 For AI Coding Agents
-- ⚙️ **The Compiler answers**: *"Does this compile?"*
-- 🧪 **FsAssay answers**: *"Did the agent produce the kind of F# this repository intended?"*
-- 🛡️ **The Harness answers**: *"Is the result admissible and supported by evidence?"*
+| Question | Enterprise Real-World Answer |
+| :--- | :--- |
+| **What?** | A compiler-aware F# design critic that checks whether code merely compiles or genuinely follows the repository's functional architecture. |
+| **Why?** | The F# compiler permits mutation, null, inheritance, partial functions, and mixed paradigms. Agents trained predominantly on C# will use them unless guided and checked. |
+| **Who?** | AI coding agents first; F# newcomers second; senior F# reviewers, architects, and maintainers third. |
+| **When?** | After every agent edit, before PR submission, during CI verification, and before evidence/release packaging. |
+| **Where?** | Agent harness, CLI, IDE extension, CI pipeline, and training-data generation pipelines. |
+| **How?** | Skills guide generation; compiler checks language correctness; FsAssay checks design obligations; tests check behavior; CFF/Crucible checks domain truth. |
 
 ---
 
-## 🔬 Deep Design-Quality Research Layer
+## ⚡ Skills vs. FsAssay: Complementary Halves
 
-Few static analysis tools explore the deep design-quality layer of functional programming. FsAssay specifically researches and flags:
-- **Option Constellations**: Unnecessary option wrapping (`Option<Option<'T>>`) or unguarded unwrapping.
-- **Flag-Based State Machines**: Boolean-heavy state flags (`isPending`, `isApproved`) replaced by Discriminated Unions.
-- **Primitive Blindness**: Alias primitives (`type CustomerId = string`) replaced by single-case DUs.
-- **Hidden Effects & Stringly Errors**: Throwing raw exceptions or returning string errors replaced by `Result<'T, 'Error>`.
-- **Missed Computation Expressions**: Manual callback chains or blocking tasks refactored into `async { ... }` or `task { ... }`.
+Skills and FsAssay solve different halves of the agentic coding problem:
+
+| Capability | F# Agent Skill | FsAssay Critic |
+| :--- | :---: | :---: |
+| **Tells the agent what good F# looks like** | Yes | Via diagnostic remediations (`--fix`) |
+| **Prevents C#-shaped code generation** | Improves probability | Detects observable violations |
+| **Can be ignored by the model** | Yes | Not when enforced by CI / Harness |
+| **Understands resolved F# symbols** | No | Yes (via FCS / TAST) |
+| **Produces machine-verifiable evidence** | No | Yes (OASIS SARIF v2.1.0) |
+| **Measures architectural improvement** | Weakly | Yes (Grades S to F, Rate Cards) |
+| **Provides training feedback** | Examples & instructions | Rejection labels & counterexamples |
+| **Requires human interpretation** | Often | Deterministic rules: No; Contextual: Profile-gated |
+
+> **"A Skill is the textbook. FsAssay is the examiner."**
+> 
+> *The compiler asks: "Does this compile?" FsAssay asks: "Did the agent produce the kind of F# this repository intended?"*
+
+---
+
+## 🏢 Real-World Enterprise Workout Example
+
+Consider an AI agent building an order-processing service.
+
+**The Skill instructs the agent:**
+Use `OrderId` and `CustomerId` domain types • Model states using DUs • Return `Result` • Keep I/O in the shell • Avoid partial access and hidden exceptions.
+
+**The Agent nevertheless generates:**
+```fsharp
+let processOrder (orderId: string) (customerId: string) =
+    let customer = repository.find customerId |> Option.get
+    let mutable total = 0m
+
+    for item in customer.Items do
+        total <- total + item.Price
+
+    total
+```
+
+*This compiles cleanly, so the compiler cannot protect the architecture.*
+
+**FsAssay responds at multi-level confidence:**
+- ❌ **BLOCK (`FSA-C02` / `FSA1002`)**: Resolved call to `Option.get` creates an unguarded partial function.
+- ❌ **BLOCK under `core` (`FSA1001`)**: Mutation (`let mutable`) is strictly forbidden in the functional core.
+- ⚠️ **ADVISE (`FSA1004`)**: Two string parameters (`orderId: string`, `customerId: string`) indicate primitive blindness.
+- 💡 **ADVISE (`FSA1007`)**: Iterative accumulation loop could be expressed idiomatically using `List.sumBy`.
+- ❓ **INCONCLUSIVE (`FSA1301`)**: Direct `repository` access requires boundary profile verification (`shell` vs `core`).
+
+Now the agent repairs the code in the background loop before a human reviewer sees it. The senior architect concentrates on concurrency, transaction semantics, and business correctness—not repetitive F# syntax correction.
+
+---
+
+## 📉 Human Review Overhead Reduction
+
+| Review Category | Skills Only | Skills + Trustworthy FsAssay |
+| :--- | :--- | :--- |
+| **Basic F# Idiom Correction** | Reduced somewhat | **Largely Automated** |
+| **Partial / Null / Mutation Filtering** | Human still verifies | **Mechanically Filtered** |
+| **Repeated Agent Repair Cycles** | Prompt-driven | **Evidence-Driven (`--fix`)** |
+| **Architecture Boundary Review** | Mostly human | **Pre-Classified by Profiles** |
+| **Domain & Business Correctness** | Human | **Human Expert** |
+| **Performance & Operational Design** | Human | **Human Expert** |
+
+### 🎯 Initial Impact Targets
+- **50–80%** reduction in repetitive idiom-review comments.
+- **30–50%** reduction in agent repair cycles.
+- **20–35%** reduction in total expert F# review time.
+- **Substantial** improvement in code consistency across large multi-agent teams.
+
+---
+
+## 🔄 The Complete Agentic Verification Loop
+
+```mermaid
+flowchart TD
+    A["F# Skill<br/>Generation guidance"] --> B["AI Candidate Code"]
+    B --> C["F# Compiler<br/>Syntax & Types"]
+    C --> D{"FsAssay Check<br/>Design Obligations"}
+    D -->|Violations Found| B
+    D -->|Accepted| E["Tests & Property Checks"]
+    E --> F["FsAssay Verification<br/>SARIF Evidence Bundle"]
+    F --> G["Human Expert Review<br/>Intent & Architecture"]
+    G --> H["CFF / Crucible<br/>Domain Proof"]
+```
+
+---
+
+## 🚀 The Dataset & Training Flywheel
+
+FsAssay addresses the shortage of public F# training data in two ways:
+1. **Short Term**: Corrects weak agent output today via deterministic feedback loops.
+2. **Long Term**: Creates high-quality F# training datasets for tomorrow:
+
+```
+1. Collect Bad AI Candidates ──> 2. Record Exact FsAssay Findings ──> 3. Store Corrected F# Code
+                                                                                 │
+6. Keep FsAssay as Judge    <── 5. Fine-Tune / LoRA & Prompt Eval <── 4. Produce Accepted / Rejected Pairs
+```
 
 ---
 
@@ -153,6 +223,7 @@ dotnet run --project FsAssay.Tests
 
 ## 📚 Philosophy & Further Reading
 
+- [Agentic AI & Enterprise Architecture Specification](docs/Agentic-Architecture.md)
 - [Functional-First Architecture Specification](docs/Functional-First.md)
 - [Qwen 5 SOTA Specification](docs/Qwen5.md)
 - [Domain Modeling Made Functional](https://fsharpforfunandprofit.com/ddd/) by Scott Wlaschin
