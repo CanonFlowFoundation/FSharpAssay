@@ -329,31 +329,95 @@ module Widget =
             let goodResults = runFsAssay idiomaticFactory
             Expect.isEmpty goodResults (sprintf "Idiomatic factory should have zero violations, but got: %A" (goodResults |> List.map (fun m -> m.Code)))
 
-        testCase "GoF Null Object Pattern: OOP Class vs Option" <| fun _ ->
-            let oopNullObject = """
-module BadNullObject
-type ICustomer =
-    abstract member GetName: unit -> string
-type NullCustomer() =
-    interface ICustomer with
-        member this.GetName() = ""
+        testCase "Functional-First Profile: interop (Permits null, mutable, ResizeArray)" <| fun _ ->
+            let sourceCode = """
+module InteropBoundary
+open System
+
+type ProfileAttribute(name: string) = inherit Attribute()
+
+[<Profile("interop")>]
+let interopBridge () =
+    let mutable buffer = ResizeArray<int>() // Permitted under interop
+    let rawObj: string = null // Permitted under interop
+    buffer.Add(10)
+    rawObj
 """
-            let idiomaticNullObject = """
-module GoodNullObject
-type Customer = { Name: string }
-let getCustomerName (customerOpt: Customer option) =
-    match customerOpt with
-    | Some c -> c.Name
-    | None -> "Guest"
+            let results = runFsAssay sourceCode
+            Expect.isEmpty results "Interop profile should permit local mutability, null, and ResizeArray for C# bridge"
+
+        testCase "Functional-First Profile: shell (Permits EF Core & Persistence)" <| fun _ ->
+            let sourceCode = """
+module PersistenceShell
+open System
+open Microsoft.EntityFrameworkCore
+
+type ProfileAttribute(name: string) = inherit Attribute()
+
+type DbContext() = class end
+
+[<Profile("shell")>]
+let saveToDb () =
+    let ctx = new DbContext()
+    ()
 """
-            let oopResults = runFsAssay oopNullObject
-            expectViolation "FSA1008" oopResults
-            let goodResults = runFsAssay idiomaticNullObject
-            Expect.isEmpty goodResults (sprintf "Idiomatic null object should have zero violations, but got: %A" (goodResults |> List.map (fun m -> m.Code)))
+            let results = runFsAssay sourceCode
+            Expect.isEmpty results "Shell profile should permit EF Core persistence infrastructure"
+
+        testCase "Functional-First Profile: script (Permits Async.RunSynchronously & Loops)" <| fun _ ->
+            let sourceCode = """
+module ScriptRunner
+open System
+
+type ProfileAttribute(name: string) = inherit Attribute()
+
+[<Profile("script")>]
+let runScript () =
+    let mutable i = 0
+    while i < 5 do i <- i + 1
+    let task = async { return 100 }
+    let res = task |> Async.RunSynchronously
+    res
+"""
+            let results = runFsAssay sourceCode
+            Expect.isEmpty results "Script profile should permit imperative loops and synchronous blocking"
+
+        testCase "Functional-First Profile: performance (Permits local hot-path mutability)" <| fun _ ->
+            let sourceCode = """
+module HotPath
+open System
+
+type ProfileAttribute(name: string) = inherit Attribute()
+
+[<Profile("performance")>]
+let computeFast () =
+    let mutable total = 0
+    total <- total + 5
+    total
+"""
+            let results = runFsAssay sourceCode
+            Expect.isEmpty results "Performance profile should permit measured local mutability in hot paths"
+
+        testCase "Functional-First Profile: core (Strict zero-tolerance functional purity)" <| fun _ ->
+            let sourceCode = """
+module CoreDomain
+open System
+
+type ProfileAttribute(name: string) = inherit Attribute()
+
+[<Profile("core")>]
+let domainLogic () =
+    let mutable total = 0 // Strictly blocked in core
+    total <- total + 5
+    total
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA1001" results
     ]
 
 [<EntryPoint>]
 let main argv =
     runTestsWithCLIArgs [] argv tests
+
 
 

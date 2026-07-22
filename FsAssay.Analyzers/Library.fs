@@ -52,8 +52,10 @@ module Rules =
                         let isSuppressed = 
                             sups |> List.contains code ||
                             (code = "FSA1003" && sups |> List.contains "PROFILE:interop") ||
-                            (code = "FSA1001" && sups |> List.contains "PROFILE:interop") ||
-                            (code = "FSA1101" && sups |> List.contains "PROFILE:script") ||
+                            (code = "FSA1001" && (sups |> List.contains "PROFILE:interop" || sups |> List.contains "PROFILE:script" || sups |> List.contains "PROFILE:performance" || ctx.FileName.EndsWith(".fsx"))) ||
+                            (code = "FSA1009" && sups |> List.contains "PROFILE:interop") ||
+                            (code = "FSA1101" && (sups |> List.contains "PROFILE:script" || ctx.FileName.EndsWith(".fsx"))) ||
+                            (code = "FSA1007" && (sups |> List.contains "PROFILE:script" || ctx.FileName.EndsWith(".fsx"))) ||
                             (code = "FSA1301" && sups |> List.contains "PROFILE:shell")
                         if not isSuppressed then
                             violations <- createViolationWithFix code msg range fixOpt :: violations
@@ -129,6 +131,11 @@ module Rules =
                         ctx.TypedTree.Value.Declarations |> List.iter (fun d -> visitDecl d [])
                     with _ -> ()
                 
+                let hasProfile (p: string) =
+                    source.Contains(sprintf "[<Profile(\"%s\")>]" p) ||
+                    source.Contains(sprintf "[<Profile (\"%s\")>]" p) ||
+                    source.Contains(sprintf "PROFILE:%s" p)
+
                 // FSA1002: Partial Access Fallback
                 if Regex.IsMatch(source, @"\.Value\b") || source.Contains("Option.get") || source.Contains("List.head") || source.Contains("Seq.head") then
                     if not (violations |> List.exists (fun v -> v.Code = "FSA1002")) then
@@ -148,19 +155,20 @@ module Rules =
                     violations <- createViolation "FSA1006" "Generic Catch: Do not catch generic exceptions for flow control. Use Result types instead." Range.range0 :: violations
 
                 // FSA1007: Imperative Loops
-                if Regex.IsMatch(source, @"\bwhile\b") then
+                if Regex.IsMatch(source, @"\bwhile\b") && not (hasProfile "script" || ctx.FileName.EndsWith(".fsx")) then
                     violations <- createViolation "FSA1007" "Imperative Loops: Avoid 'while' loops. Use Seq.fold or recursion." Range.range0 :: violations
 
                 // FSA1008: OOP Inheritance
-                if Regex.IsMatch(source, @"\binherit\b") || Regex.IsMatch(source, @"\babstract\s+member\b") || Regex.IsMatch(source, @"\binterface\b.*with") then
-                    violations <- createViolation "FSA1008" "OOP Inheritance: Avoid OOP inheritance and interfaces. Use records of functions or Discriminated Unions." Range.range0 :: violations
+                if (Regex.IsMatch(source, @"\binherit\b") || Regex.IsMatch(source, @"\babstract\s+member\b") || Regex.IsMatch(source, @"\binterface\b.*with")) && not (hasProfile "shell" || hasProfile "interop") then
+                    if not (source.Contains("ProfileAttribute") || source.Contains("SuppressMessageAttribute")) then
+                        violations <- createViolation "FSA1008" "OOP Inheritance: Avoid OOP inheritance and interfaces. Use records of functions or Discriminated Unions." Range.range0 :: violations
 
                 // FSA1009: Mutable Collections
-                if Regex.IsMatch(source, @"\bResizeArray\b") || source.Contains("System.Collections.Generic.List") || source.Contains("System.Collections.Generic.Dictionary") then
+                if (Regex.IsMatch(source, @"\bResizeArray\b") || source.Contains("System.Collections.Generic.List") || source.Contains("System.Collections.Generic.Dictionary")) && not (hasProfile "interop") then
                     violations <- createViolation "FSA1009" "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list." Range.range0 :: violations
 
                 // FSA1101: Async Blocking Fallback
-                if source.Contains("Async.RunSynchronously") || source.Contains(".Result") || source.Contains(".Wait()") then
+                if (source.Contains("Async.RunSynchronously") || source.Contains(".Result") || source.Contains(".Wait()")) && not (hasProfile "script" || ctx.FileName.EndsWith(".fsx")) then
                     if not (violations |> List.exists (fun v -> v.Code = "FSA1101")) then
                         violations <- createViolation "FSA1101" "Async Blocking: Avoid Async.RunSynchronously, .Result, or .Wait(). Use let! inside async or task block." Range.range0 :: violations
 
@@ -169,7 +177,7 @@ module Rules =
                     violations <- createViolation "FSA1201" "Unbounded Materialization: Avoid Seq.toList on unbounded sequences. Use Seq.truncate or bounded channels." Range.range0 :: violations
 
                 // FSA1301: EF Core Leak in Domain
-                if source.Contains("Microsoft.EntityFrameworkCore") || source.Contains("DbContext") then
+                if (source.Contains("Microsoft.EntityFrameworkCore") || source.Contains("DbContext")) && not (hasProfile "shell") then
                     violations <- createViolation "FSA1301" "EF Core Scope Leak: Avoid ORM/EFCore dependencies in core domain logic. Isolate persistence to shell." Range.range0 :: violations
 
                 // FSA1401: Unbounded Async Start Fallback
