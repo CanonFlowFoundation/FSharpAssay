@@ -569,11 +569,35 @@ let block (t: Task<int>) = t.Result
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA-S05" results
+
+        testCase "Enterprise Workout: processOrder C#-shaped F# detection" <| fun _ ->
+            let sourceCode = """
+module EnterpriseWorkout
+open System
+
+type Item = { Price: decimal }
+type Customer = { Items: Item list }
+type Repository = { find: string -> Customer option }
+
+let processOrder (repository: Repository) (orderId: string) (customerId: string) =
+    let customer = repository.find customerId |> Option.get
+    let mutable total = 0m
+
+    for item in customer.Items do
+        total <- total + item.Price
+
+    total
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA1001" results
+            expectViolation "FSA1002" results
+            expectViolation "FSA-C02" results
     ]
 
 [<EntryPoint>]
 let main argv =
     runTestsWithCLIArgs [] argv tests
+
 
 
 
