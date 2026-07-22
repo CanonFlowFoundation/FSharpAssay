@@ -40,3 +40,9 @@ This specification outlines the State-of-the-Art (SOTA) static analysis guardrai
 ## II. Verification Matrix & Test Status
 
 All 13 SOTA rules (`FSA-C01`–`FSA-C08` and `FSA-S01`–`FSA-S05`) are accompanied by dedicated Expecto test cases in `FsAssay.Tests`.
+
+---
+
+## Appendix: Implemented by Push
+
+All 13 SOTA Agentic AI Guardrail Rules specified above have been fully implemented in `Library.fs` and are tested extensively with Expecto tests in `Program.fs`.

@@ -16,7 +16,7 @@ module Server =
             printfn "   Press Ctrl+C to terminate the live dashboard server.\n"
             
             let htmlFile = Path.GetTempFileName() + ".html"
-            Output.writeMaterialHtmlDashboard results totalFiles htmlFile
+            Output.writeMaterialDashboard results htmlFile
             let htmlBytes = File.ReadAllBytes(htmlFile)
             if File.Exists(htmlFile) then File.Delete(htmlFile)
 

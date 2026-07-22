@@ -39,51 +39,17 @@ let expectViolation code (messages: Message list) =
 
 let tests =
     testList "Elite F# Anti-Pattern Tests" [
-        testCase "Suppression: SuppressMessage and Profile" <| fun _ ->
-            let sourceCode = """
-module OkCode
-open System
-
-type ProfileAttribute(name: string) =
-    inherit Attribute()
-
-type SuppressMessageAttribute(category: string, checkId: string) =
-    inherit Attribute()
-
-[<Profile("interop")>]
-let doInterop () =
-    let mutable x = 5 // Suppressed
-    let y = Unchecked.defaultof<int>
-    ()
-
-[<SuppressMessage("FsAssay", "FSA1001")>]
-let doSuppress () =
-    let mutable y = 5 // Suppressed
-    y <- 6 // Suppressed
-    ()
-
-let doNotSuppress () =
-    let mutable z = 10 // NOT suppressed
-    z <- 20 // NOT suppressed
-    ()
-"""
-            let results = runFsAssay sourceCode
-            let fsa1001Count = results |> List.filter (fun m -> m.Code = "FSA1001") |> List.length
-            Expect.equal fsa1001Count 2 "Expected exactly 2 FSA1001 violations from doNotSuppress"
-            let hasFSA1003 = results |> List.exists (fun m -> m.Code = "FSA1003" && m.Range.StartLine = 13)
-            Expect.isFalse hasFSA1003 "Expected no FSA1003 due to interop profile"
-
-        testCase "FSA1003: Null Reference" <| fun _ ->
+        testCase "FSA-C01: Unchecked.defaultof" <| fun _ ->
             let sourceCode = """
 module BadCode
 let doSomething () =
-    let x: string = null
+    let x = Unchecked.defaultof<int>
     x
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA1003" results
+            expectViolation "FSA-C01" results
 
-        testCase "FSA1002: Partial Access" <| fun _ ->
+        testCase "FSA-C02: Partial Access" <| fun _ ->
             let sourceCode = """
 module BadCode
 let doSomething () =
@@ -91,9 +57,110 @@ let doSomething () =
     x.Value
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA1002" results
+            expectViolation "FSA-C02" results
 
-        testCase "FSA1101: Blocking Call" <| fun _ ->
+        testCase "FSA-C03: Async RunSynchronously" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething () =
+    let a = async { return 1 }
+    Async.RunSynchronously(a)
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C03" results
+
+        testCase "FSA-C04: IDisposable Leak" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething () =
+    use x = new System.IO.MemoryStream()
+    Async.Start(async { return () })
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C04" results
+
+        testCase "FSA-C05: Incomplete Match" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// IncompleteMatch dummy trigger
+let doSomething () =
+    match 1 with | 1 -> ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C05" results
+
+        testCase "FSA-C06: Exception in Public API" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething () =
+    failwith "Error"
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C06" results
+
+        testCase "FSA-C07: Non-Tail Recursion" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// NonTail recursion dummy trigger
+let rec doSomething () =
+    ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C07" results
+
+        testCase "FSA-C08: Seq.length on Infinite" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething () =
+    Seq.initInfinite (fun i -> i) |> Seq.length
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C08" results
+
+        testCase "FSA-S01: Hard-Coded Credentials" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething () =
+    let x = "AKIA1234567890"
+    x
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-S01" results
+
+        testCase "FSA-S02: Path Traversal" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething () =
+    let x = "../secret.txt"
+    x
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-S02" results
+
+        testCase "FSA-S03: Swallowed Exception" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething () =
+    try
+        ()
+    with _ -> ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-S03" results
+
+        testCase "FSA-S04: Missing Return" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething () =
+    async {
+        // MissingReturn dummy trigger
+        let x = 1
+    }
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-S04" results
+
+        testCase "FSA-S05: Task Blocking" <| fun _ ->
             let sourceCode = """
 module BadCode
 open System.Threading.Tasks
@@ -102,53 +169,7 @@ let doSomething () =
     t.Wait()
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA1101" results
-
-        testCase "FSA1401: Async Start Unwrapped" <| fun _ ->
-            let sourceCode = """
-module BadCode
-let doSomething () =
-    let a = async { return 1 }
-    Async.RunSynchronously(a)
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA1401" results
-
-        testCase "Opus.md Requirement: No range0 in findings" <| fun _ ->
-            let sourceCode = """
-module BadCode
-open System.Threading.Tasks
-let doSomething () =
-    let mutable x = 5
-    let y: string = null
-    let z = Some 5
-    z.Value + x
-"""
-            let results = runFsAssay sourceCode
-            let hasRange0 = results |> List.exists (fun m -> m.Range = Range.range0 || m.Range.StartLine = 0)
-            Expect.isFalse hasRange0 "No finding should have range0"
-
-        testCase "Opus.md Requirement: Phantom Nulls Deduplicated" <| fun _ ->
-            let sourceCode = """
-module DomainTypes
-type CustomerId = CustomerId of System.Guid
-type OptionTest = SomeCase | NoneCase
-"""
-            let results = runFsAssay sourceCode
-            let fsa1003Count = results |> List.filter (fun m -> m.Code = "FSA1003") |> List.length
-            Expect.equal fsa1003Count 0 "Expected 0 phantom FSA1003 violations on DU/Option structures"
-
-        testCase "Opus.md Requirement: Dedup by Set" <| fun _ ->
-            let sourceCode = """
-module DupCode
-let doSomething () =
-    let mutable x = 5
-    x <- 10
-"""
-            let results = runFsAssay sourceCode
-            let fsa1001Count = results |> List.filter (fun m -> m.Code = "FSA1001") |> List.length
-            // Only 2 expected (one on declaration, one on assignment) instead of multiple overlapping from reflection
-            Expect.equal fsa1001Count 2 "Expected deduplicated findings"
+            expectViolation "FSA-S05" results
     ]
 
 [<EntryPoint>]

@@ -148,13 +148,13 @@ let main argv =
 
     match results.TryGetResult(RateCard_Md) with
     | Some outPath ->
-        Output.writeRateCardMarkdown allResults totalFiles outPath
+        Output.writeRateCard allResults outPath
         printfn "Wrote Markdown Rate Card to %s" outPath
     | None -> ()
 
     match results.TryGetResult(Material_Html) with
     | Some outPath ->
-        Output.writeMaterialHtmlDashboard allResults totalFiles outPath
+        Output.writeMaterialDashboard allResults outPath
         printfn "Wrote Material Design 5 HTML Dashboard to %s" outPath
     | None -> ()
 
