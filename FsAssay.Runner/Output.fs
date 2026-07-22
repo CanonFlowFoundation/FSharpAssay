@@ -100,3 +100,74 @@ module Output =
         |}
         let options = JsonSerializerOptions(WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
         File.WriteAllText(outPath, JsonSerializer.Serialize(record, options))
+
+    let writeRateCard (results: (string * Message list) list) (outPath: string) =
+        let totalViolations = results |> List.sumBy (fun (_, msgs) -> msgs.Length)
+        let totalFiles = results.Length
+        let score = max 0 (100 - (totalViolations * 5))
+        let grade =
+            if score >= 95 then "S"
+            elif score >= 85 then "A"
+            elif score >= 70 then "B"
+            elif score >= 50 then "C"
+            else "F"
+
+        let breakdown =
+            results
+            |> List.map (fun (f, msgs) ->
+                let fileHeader = sprintf "### 📄 `%s`\n" f
+                let violationsList =
+                    msgs
+                    |> List.map (fun m -> sprintf "* **[%s]** (Line %d): %s" m.Code m.Range.StartLine m.Message)
+                    |> String.concat "\n"
+                fileHeader + violationsList)
+            |> String.concat "\n\n"
+
+        let md = 
+            "# 🏆 FsAssay Functional Code Quality Rate Card\n\n" +
+            "## Executive Summary\n" +
+            sprintf "* **Score**: %d / 100\n" score +
+            sprintf "* **Grade**: **[%s]**\n" grade +
+            sprintf "* **Files Scanned**: %d\n" totalFiles +
+            sprintf "* **Total Anti-Patterns Detected**: %d\n\n---\n\n" totalViolations +
+            "## Violations Breakdown\n" + breakdown
+
+        File.WriteAllText(outPath, md)
+
+    let writeMaterialDashboard (results: (string * Message list) list) (outPath: string) =
+        let totalViolations = results |> List.sumBy (fun (_, msgs) -> msgs.Length)
+        let totalFiles = results.Length
+        let score = max 0 (100 - (totalViolations * 5))
+        let grade =
+            if score >= 95 then "S"
+            elif score >= 85 then "A"
+            elif score >= 70 then "B"
+            elif score >= 50 then "C"
+            else "F"
+
+        let fileSections =
+            results
+            |> List.map (fun (f, msgs) ->
+                let vHtml = msgs |> List.map (fun m -> sprintf "<div class=\"violation\"><span class=\"code\">[%s]</span> (Line %d) %s</div>" m.Code m.Range.StartLine m.Message) |> String.concat ""
+                sprintf "<h3>%s</h3>%s" f (if String.IsNullOrEmpty vHtml then "<p style='color: #03dac6;'>✓ Clean (Zero Violations)</p>" else vHtml))
+            |> String.concat ""
+
+        let html = 
+            "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<title>FsAssay Material 5 Dashboard</title>\n<style>\n" +
+            "body { font-family: sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 24px; }\n" +
+            ".header { display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 20px; border-radius: 12px; }\n" +
+            ".badge { font-size: 36px; font-weight: bold; padding: 8px 24px; border-radius: 8px; background: #bb86fc; color: #000; }\n" +
+            ".card { background: #1e1e1e; margin-top: 20px; padding: 20px; border-radius: 12px; }\n" +
+            ".violation { border-left: 4px solid #cf6679; padding-left: 12px; margin: 12px 0; }\n" +
+            ".code { font-family: monospace; color: #03dac6; }\n" +
+            "</style>\n</head>\n<body>\n" +
+            "<div class=\"header\">\n<div>\n<h1>FsAssay Quality Dashboard</h1>\n" +
+            sprintf "<p>Score: <strong>%d / 100</strong> | Total Anti-Patterns: <strong>%d</strong></p>\n</div>\n" score totalViolations +
+            sprintf "<div class=\"badge\">Grade [%s]</div>\n</div>\n" grade +
+            "<div class=\"card\">\n" +
+            sprintf "<h2>Scanned Files (%d)</h2>\n" totalFiles +
+            fileSections + "\n</div>\n</body>\n</html>"
+
+        File.WriteAllText(outPath, html)
+
+

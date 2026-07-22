@@ -7,15 +7,18 @@ open System.Text.RegularExpressions
 
 module Rules =
 
-    let createViolation code msg range =
+    let createViolationWithFix code msg range fixOpt =
         {
             Type = code
             Message = msg
             Code = code
             Severity = Severity.Error
             Range = range
-            Fixes = []
+            Fixes = match fixOpt with Some f -> [f] | None -> []
         }
+
+    let createViolation code msg range =
+        createViolationWithFix code msg range None
 
     let extractSuppressions (attrs: seq<FSharpAttribute>) =
         attrs
@@ -45,13 +48,18 @@ module Rules =
                 let mutable violations = []
                 
                 if ctx.TypedTree.IsSome then
-                    let addViolation code msg range (sups: string list) =
+                    let addViolationWithFix code msg range (sups: string list) fixOpt =
                         let isSuppressed = 
                             sups |> List.contains code ||
                             (code = "FSA1003" && sups |> List.contains "PROFILE:interop") ||
-                            (code = "FSA1001" && sups |> List.contains "PROFILE:interop")
+                            (code = "FSA1001" && sups |> List.contains "PROFILE:interop") ||
+                            (code = "FSA1101" && sups |> List.contains "PROFILE:script") ||
+                            (code = "FSA1301" && sups |> List.contains "PROFILE:shell")
                         if not isSuppressed then
-                            violations <- createViolation code msg range :: violations
+                            violations <- createViolationWithFix code msg range fixOpt :: violations
+
+                    let addViolation code msg range sups =
+                        addViolationWithFix code msg range sups None
 
                     let rec visitExpr (expr: FSharpExpr) (sups: string list) =
                         match expr with
@@ -62,21 +70,35 @@ module Rules =
                                name = "Microsoft.FSharp.Collections.ListModule.Head" ||
                                name = "Microsoft.FSharp.Collections.SeqModule.Head" ||
                                name.EndsWith("FSharpList`1.get_Head") then
-                                addViolation "FSA1002" "Partial Access: Do not use Option.get, .Value, or .Head. Use pattern matching." expr.Range sups
+                                let fix = { FromRange = expr.Range; FromText = "Option.get"; ToText = "match opt with Some v -> v | None -> failwith \"handle missing\"" }
+                                addViolationWithFix "FSA1002" "Partial Access: Do not use Option.get, .Value, or .Head. Use pattern matching." expr.Range sups (Some fix)
                             
+                            // FSA1101: Blocking on Async
+                            if name = "Microsoft.FSharp.Control.AsyncModule.RunSynchronously" ||
+                               name.EndsWith("Task`1.get_Result") ||
+                               name.EndsWith("Task.Wait") then
+                                addViolation "FSA1101" "Async Blocking: Avoid Async.RunSynchronously, .Result, or .Wait(). Use let! inside async or task block." expr.Range sups
+
+                            // FSA1401: Missing Cancellation Token
+                            if name = "Microsoft.FSharp.Control.AsyncModule.Start" then
+                                addViolation "FSA1401" "Unbounded Async Start: Avoid Async.Start without explicit cancellation token. Use Async.StartImmediate or pass CancellationToken." expr.Range sups
+
                             args |> List.iter (fun a -> visitExpr a sups)
                             obj |> Option.iter (fun o -> visitExpr o sups)
                         | FSharpExprPatterns.Let((binding, valExpr, _), body) ->
                             let localSups = extractSuppressions binding.Attributes @ sups
                             if binding.IsMutable then
-                                addViolation "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." binding.DeclarationLocation localSups
+                                let fix = { FromRange = binding.DeclarationLocation; FromText = "mutable"; ToText = "let updatedRecord = { record with Field = newValue }" }
+                                addViolationWithFix "FSA1001" "Mutation Overuse: Avoid 'mutable'. Use record copies with 'with' instead." binding.DeclarationLocation localSups (Some fix)
                             visitExpr valExpr localSups
                             visitExpr body localSups
                         | FSharpExprPatterns.DefaultValue(_) ->
-                            addViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups
+                            let fix = { FromRange = expr.Range; FromText = "null"; ToText = "None" }
+                            addViolationWithFix "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups (Some fix)
                         | FSharpExprPatterns.Const(obj, ty) ->
                             if isNull obj && not (ty.HasTypeDefinition && ty.TypeDefinition.LogicalName = "unit") then
-                                addViolation "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups
+                                let fix = { FromRange = expr.Range; FromText = "null"; ToText = "None" }
+                                addViolationWithFix "FSA1003" "Null Reference: Avoid 'null'. Use 'Option' types to represent missing values." expr.Range sups (Some fix)
                         | FSharpExprPatterns.ValueSet(v, valExpr) ->
                             addViolation "FSA1001" "Mutation Overuse: Avoid mutation. Use record copies with 'with' instead." expr.Range sups
                             visitExpr valExpr sups
@@ -102,7 +124,12 @@ module Rules =
 
                     ctx.TypedTree.Value.Declarations |> List.iter (fun d -> visitDecl d [])
                 
-                // Keep regex for the rest
+                // FSA1002: Partial Access Fallback
+                if Regex.IsMatch(source, @"\.Value\b") || source.Contains("Option.get") || source.Contains("List.head") || source.Contains("Seq.head") then
+                    if not (violations |> List.exists (fun v -> v.Code = "FSA1002")) then
+                        let fix = { FromRange = Range.range0; FromText = "Option.get"; ToText = "match opt with Some v -> v | None -> failwith \"handle missing\"" }
+                        violations <- createViolationWithFix "FSA1002" "Partial Access: Do not use Option.get, .Value, or .Head. Use pattern matching." Range.range0 (Some fix) :: violations
+
                 // FSA1004: Primitive Obsession
                 if Regex.IsMatch(source, @"type\s+[A-Za-z0-9_]+\s*=\s*(string|int|float|bool|decimal|DateTime)\b") then
                     violations <- createViolation "FSA1004" "Primitive Obsession: Do not use type aliases for primitives. Use Single-Case Discriminated Unions to make illegal states unrepresentable." Range.range0 :: violations
@@ -127,5 +154,24 @@ module Rules =
                 if Regex.IsMatch(source, @"\bResizeArray\b") || source.Contains("System.Collections.Generic.List") || source.Contains("System.Collections.Generic.Dictionary") then
                     violations <- createViolation "FSA1009" "Mutable Collections: Avoid C# mutable collections. Use F# immutable Map, Set, or list." Range.range0 :: violations
 
+                // FSA1101: Async Blocking Fallback
+                if source.Contains("Async.RunSynchronously") || source.Contains(".Result") || source.Contains(".Wait()") then
+                    if not (violations |> List.exists (fun v -> v.Code = "FSA1101")) then
+                        violations <- createViolation "FSA1101" "Async Blocking: Avoid Async.RunSynchronously, .Result, or .Wait(). Use let! inside async or task block." Range.range0 :: violations
+
+                // FSA1201: Unbounded Buffer / Sequence Leaks
+                if source.Contains("Seq.toList") && (source.Contains("Seq.initInfinite") || source.Contains("IEnumerable")) then
+                    violations <- createViolation "FSA1201" "Unbounded Materialization: Avoid Seq.toList on unbounded sequences. Use Seq.truncate or bounded channels." Range.range0 :: violations
+
+                // FSA1301: EF Core Leak in Domain
+                if source.Contains("Microsoft.EntityFrameworkCore") || source.Contains("DbContext") then
+                    violations <- createViolation "FSA1301" "EF Core Scope Leak: Avoid ORM/EFCore dependencies in core domain logic. Isolate persistence to shell." Range.range0 :: violations
+
+                // FSA1401: Unbounded Async Start Fallback
+                if source.Contains("Async.Start") && not (source.Contains("Async.StartImmediate")) then
+                    if not (violations |> List.exists (fun v -> v.Code = "FSA1401")) then
+                        violations <- createViolation "FSA1401" "Unbounded Async Start: Avoid Async.Start without explicit cancellation token. Use Async.StartImmediate or pass CancellationToken." Range.range0 :: violations
+
                 return violations |> List.rev
             }
+

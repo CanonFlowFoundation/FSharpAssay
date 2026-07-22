@@ -10,6 +10,10 @@ type Arguments =
     | [<AltCommandLine("-j")>] Out_Json of path:string
     | [<AltCommandLine("-s")>] Out_Sarif of path:string
     | [<AltCommandLine("-t")>] Out_Toolchain of path:string
+    | [<AltCommandLine("-r")>] Out_RateCard of path:string
+    | [<AltCommandLine("-m")>] Out_MaterialDashboard of path:string
+    | Fix
+    | Check
     | [<AltCommandLine("-a")>] Adjudicate
     with
         interface IArgParserTemplate with
@@ -19,6 +23,10 @@ type Arguments =
                 | Out_Json _ -> "Output file path for canonical JSON."
                 | Out_Sarif _ -> "Output file path for SARIF."
                 | Out_Toolchain _ -> "Output file path for toolchain record."
+                | Out_RateCard _ -> "Output file path for Markdown Rate Card."
+                | Out_MaterialDashboard _ -> "Output file path for Material 5 HTML Dashboard."
+                | Fix -> "Display suggested auto-remediations for violations."
+                | Check -> "Run fast provisional check for target files."
                 | Adjudicate -> "Run in adjudication mode (evaluate Precision/Recall against // EXPECT comments)."
 
 [<EntryPoint>]
@@ -60,6 +68,9 @@ let main argv =
                                 printfn "\n❌ %s" file
                                 for v in violations do
                                     printfn "   └── [%s] %s (Line: %d)" v.Code v.Message v.Range.StartLine
+                                    if results.Contains(Fix) then
+                                        for f in v.Fixes do
+                                            printfn "       💡 [Suggested Fix]: Replace with -> %s" f.ToText
                     | Skipped reason ->
                         skippedFiles <- skippedFiles + 1
                     | Failed fail ->
@@ -137,9 +148,22 @@ let main argv =
             printfn "Wrote toolchain record to %s" outPath
         | None -> ()
 
+        match results.TryGetResult(Out_RateCard) with
+        | Some outPath ->
+            Output.writeRateCard (List.ofSeq allResults) outPath
+            printfn "Wrote Rate Card markdown to %s" outPath
+        | None -> ()
+
+        match results.TryGetResult(Out_MaterialDashboard) with
+        | Some outPath ->
+            Output.writeMaterialDashboard (List.ofSeq allResults) outPath
+            printfn "Wrote Material Dashboard HTML to %s" outPath
+        | None -> ()
+
         if failedFiles > 0 then ExitCodes.ToolFailure
         elif results.Contains(Adjudicate) then ExitCodes.Success
         elif totalViolations > 0 then ExitCodes.BlockingFinding
         else ExitCodes.Success
+
 
 
