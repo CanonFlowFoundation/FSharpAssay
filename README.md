@@ -4,6 +4,51 @@
 
 ---
 
+## 💡 Dual Audience Value Proposition
+
+FsAssay serves as an advanced design critic valuable to both human engineers and AI coding agents by establishing a clear 3-tier boundary:
+
+```
+                  ┌──────────────────────────────────────────────┐
+                  │              Verification (P0)               │
+                  │   Deterministic defects that block builds    │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                  ┌──────────────────────▼───────────────────────┐
+                  │          Architecture Guidance (P1)          │
+                  │  Contextual findings (core, shell, interop)  │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                  ┌──────────────────────▼───────────────────────┐
+                  │                 Learning (P2)                │
+                  │  Heuristic suggestions to teach functional F#│
+                  └──────────────────────────────────────────────┘
+```
+
+### 👤 For Human F# Developers
+- **Accelerates C#/Java Transition**: Helps OOP developers master idiomatic F# patterns quickly.
+- **Deep Design Critic**: Explains *why* Discriminated Unions, records, total functions, and explicit `Result` error channels are superior to OOP class hierarchies.
+- **Domain Modeling Opportunities**: Identifies primitive obsession, boolean flag validation, and stringly-typed error risks.
+- **Beyond Linting**: Delivers a deep "functional-first" architectural review far beyond basic code formatting or style linting.
+
+### 🤖 For AI Coding Agents
+- ⚙️ **The Compiler answers**: *"Does this compile?"*
+- 🧪 **FsAssay answers**: *"Did the agent produce the kind of F# this repository intended?"*
+- 🛡️ **The Harness answers**: *"Is the result admissible and supported by evidence?"*
+
+---
+
+## 🔬 Deep Design-Quality Research Layer
+
+Few static analysis tools explore the deep design-quality layer of functional programming. FsAssay specifically researches and flags:
+- **Option Constellations**: Unnecessary option wrapping (`Option<Option<'T>>`) or unguarded unwrapping.
+- **Flag-Based State Machines**: Boolean-heavy state flags (`isPending`, `isApproved`) replaced by Discriminated Unions.
+- **Primitive Blindness**: Alias primitives (`type CustomerId = string`) replaced by single-case DUs.
+- **Hidden Effects & Stringly Errors**: Throwing raw exceptions or returning string errors replaced by `Result<'T, 'Error>`.
+- **Missed Computation Expressions**: Manual callback chains or blocking tasks refactored into `async { ... }` or `task { ... }`.
+
+---
+
 ## 🎯 The Three Pillars of FsAssay
 
 ### 1. 🔍 Strict About Mechanical Truth
