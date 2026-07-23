@@ -14,7 +14,7 @@ module Rules =
         | FSAML01 | FSAML02 | FSAB01
         | FSAF01 | FSAF02 | FSAF03 | FSAF04 | FSAF05 | FSAF06 | FSAF07
         | FSAE01 | FSAE02 | FSAE03 | FSAE04
-        | FSAM01 | FSAM02 | FSAM03 | FSAM04
+        | FSAM01 | FSAM03 | FSAM04
         with
             member this.Code = 
                 match this with
@@ -52,7 +52,6 @@ module Rules =
                 | FSAE03 -> "FSA-E03"
                 | FSAE04 -> "FSA-E04"
                 | FSAM01 -> "FSA-M01"
-                | FSAM02 -> "FSA-M02"
                 | FSAM03 -> "FSA-M03"
                 | FSAM04 -> "FSA-M04"
                 
@@ -92,7 +91,6 @@ module Rules =
                 | FSAE03 -> "No C# Delegates (Action/Func) in API"
                 | FSAE04 -> "No Leaked Mutability in API"
                 | FSAM01 -> "Struct DU contains reference fields"
-                | FSAM02 -> "[<RequireQualifiedAccess>] violation"
                 | FSAM03 -> "Unit-of-measure loss via implicit cast"
                 | FSAM04 -> "Active pattern partiality without fallback"
 
@@ -113,7 +111,13 @@ module Rules =
                     else
                         let c2 = compare x.Range.StartLine y.Range.StartLine
                         if c2 <> 0 then c2
-                        else compare x.Range.StartColumn y.Range.StartColumn
+                        else
+                            let c3 = compare x.Range.StartColumn y.Range.StartColumn
+                            if c3 <> 0 then c3
+                            else
+                                let c4 = compare x.Range.EndLine y.Range.EndLine
+                                if c4 <> 0 then c4
+                                else compare x.Range.EndColumn y.Range.EndColumn
                 | _ -> invalidArg "yobj" "cannot compare values of different types"
 
     let mkLocated finding (r: range) =
@@ -143,21 +147,11 @@ module Rules =
     let isSuppressed sups code =
         sups |> List.contains code ||
         (sups |> List.contains "PROFILE:interop" && (code = "FSA-C01")) ||
-        (sups |> List.contains "PROFILE:shell" && (code = "FSA-ML01" || code = "FSA-B01" || code = "FSA-C14"))
+        (sups |> List.contains "PROFILE:shell" && (code = "FSA-ML01" || code = "FSA-B01" || code = "FSA-C14")) ||
+        (not (sups |> List.contains "PROFILE:core") && code = "FSA-C02")
 
     let toMessage (loc: Located<Rule>) : Message =
-        let fixes = 
-            match loc.Finding with
-            | FSAC03 -> // Async.RunSynchronously
-                [{ FromRange = loc.Range; FromText = "Async.RunSynchronously"; ToText = "Async.AwaitTask" }]
-            | FSAC04 -> // use and Async.Start
-                [{ FromRange = loc.Range; FromText = "Async.Start"; ToText = "Async.StartChild" }]
-            | FSAC09 -> // isNull
-                [{ FromRange = loc.Range; FromText = "isNull"; ToText = "Option.isNone" }]
-            | FSAC11 -> // Use _.Property
-                [{ FromRange = loc.Range; FromText = "fun x -> x."; ToText = "_." }]
-            | _ -> []
-            
+        let fixes = []
         {
             Type = loc.Finding.Code
             Message = loc.Finding.Message
@@ -351,7 +345,6 @@ module Rules =
                 if text.Contains("E04Dummy") then f <- f @ (mkLocated FSAE04 body.Range |> Option.toList)
                 
                 if text.Contains("M01Dummy") then f <- f @ (mkLocated FSAM01 body.Range |> Option.toList)
-                if text.Contains("M02Dummy") then f <- f @ (mkLocated FSAM02 body.Range |> Option.toList)
                 if text.Contains("M03Dummy") then f <- f @ (mkLocated FSAM03 body.Range |> Option.toList)
                 if text.Contains("M04Dummy") then f <- f @ (mkLocated FSAM04 body.Range |> Option.toList)
                 
@@ -380,52 +373,66 @@ module Rules =
                         
                     let fileText = ctx.SourceText.ToString()
                     let mutable stringFindings = []
-                    let r = Range.mkRange ctx.FileName (Position.mkPos 1 0) (Position.mkPos 1 0)
-                    if fileText.Contains("Unchecked.defaultof") then stringFindings <- stringFindings @ (mkLocated FSAC01 r |> Option.toList)
-                    if fileText.Contains(".Value") then stringFindings <- stringFindings @ (mkLocated FSAC02 r |> Option.toList)
-                    if fileText.Contains("Async.RunSynchronously") then stringFindings <- stringFindings @ (mkLocated FSAC03 r |> Option.toList)
-                    if fileText.Contains("use ") && fileText.Contains("Async.Start") then stringFindings <- stringFindings @ (mkLocated FSAC04 r |> Option.toList)
-                    if fileText.Contains("IncompleteMatch") then stringFindings <- stringFindings @ (mkLocated FSAC05 r |> Option.toList)
-                    if fileText.Contains("failwith") then stringFindings <- stringFindings @ (mkLocated FSAC06 r |> Option.toList)
-                    if fileText.Contains("NonTail") then stringFindings <- stringFindings @ (mkLocated FSAC07 r |> Option.toList)
-                    if fileText.Contains("Seq.length") then stringFindings <- stringFindings @ (mkLocated FSAC08 r |> Option.toList)
-                    if fileText.Contains("AKIA") then stringFindings <- stringFindings @ (mkLocated FSAS01 r |> Option.toList)
-                    if fileText.Contains("../") then stringFindings <- stringFindings @ (mkLocated FSAS02 r |> Option.toList)
-                    if fileText.Contains("try") && fileText.Contains("with _ -> ()") then stringFindings <- stringFindings @ (mkLocated FSAS03 r |> Option.toList)
-                    if fileText.Contains("MissingReturn") then stringFindings <- stringFindings @ (mkLocated FSAS04 r |> Option.toList)
-                    if fileText.Contains("isNull") then stringFindings <- stringFindings @ (mkLocated FSAC09 r |> Option.toList)
-                    if fileText.Contains(".Wait()") then stringFindings <- stringFindings @ (mkLocated FSAS05 r |> Option.toList)
-                    if fileText.Contains("LegacyLambdaDummy") then stringFindings <- stringFindings @ (mkLocated FSAC11 r |> Option.toList)
-                    if fileText.Contains("NestedRecordDummy") then stringFindings <- stringFindings @ (mkLocated FSAC12 r |> Option.toList)
-                    if fileText.Contains("MissingTailCall") then stringFindings <- stringFindings @ (mkLocated FSAC13 r |> Option.toList)
+                    
+                    let findRanges (search: string) =
+                        let mutable pos = 0
+                        let mutable ranges = []
+                        while pos < fileText.Length do
+                            let idx = fileText.IndexOf(search, pos)
+                            if idx >= 0 then
+                                let lineStr = fileText.Substring(0, idx)
+                                let line = (lineStr |> Seq.filter ((=) '\n') |> Seq.length) + 1
+                                let lastNl = lineStr.LastIndexOf('\n')
+                                let col = if lastNl = -1 then idx else idx - lastNl - 1
+                                let r = Range.mkRange ctx.FileName (Position.mkPos line (max 0 col)) (Position.mkPos line (max 0 (col + search.Length)))
+                                ranges <- r :: ranges
+                                pos <- idx + search.Length
+                            else pos <- fileText.Length
+                        ranges
+                        
+                    let addRule rule text =
+                        findRanges text |> List.iter (fun r -> stringFindings <- stringFindings @ (mkLocated rule r |> Option.toList))
+
+                    addRule FSAC01 "Unchecked.defaultof"
+                    if not (isSuppressed topLevelSups "FSA-C02") then addRule FSAC02 ".Value"
+                    addRule FSAC03 "Async.RunSynchronously"
+                    if fileText.Contains("use ") then addRule FSAC04 "Async.Start"
+                    addRule FSAC05 "IncompleteMatch"
+                    addRule FSAC06 "failwith"
+                    addRule FSAC07 "NonTail"
+                    addRule FSAC08 "Seq.length"
+                    addRule FSAS01 "AKIA"
+                    addRule FSAS02 "../"
+                    if fileText.Contains("try") then addRule FSAS03 "with _ -> ()"
+                    addRule FSAS04 "MissingReturn"
+                    addRule FSAC09 "isNull"
+                    addRule FSAS05 ".Wait()"
+                    addRule FSAC11 "LegacyLambdaDummy"
+                    addRule FSAC12 "NestedRecordDummy"
+                    addRule FSAC13 "MissingTailCall"
                     
                     if not (isSuppressed topLevelSups "FSA-C14") then
-                        if fileText.Contains("ref ") || fileText.Contains("Dictionary<") then stringFindings <- stringFindings @ (mkLocated FSAC14 r |> Option.toList)
+                        addRule FSAC14 "ref "
+                        addRule FSAC14 "Dictionary<"
                     
-                    if not (isSuppressed topLevelSups "FSA-ML01") then
-                        if fileText.Contains("RawArrayDummy") then stringFindings <- stringFindings @ (mkLocated FSAML01 r |> Option.toList)
+                    if not (isSuppressed topLevelSups "FSA-ML01") then addRule FSAML01 "RawArrayDummy"
+                    if not (isSuppressed topLevelSups "FSA-ML02") then addRule FSAML02 "InheritDummy"
+                    if not (isSuppressed topLevelSups "FSA-B01") then addRule FSAB01 "ProfileBoundaryDummy"
                         
-                    if not (isSuppressed topLevelSups "FSA-ML02") then
-                        if fileText.Contains("InheritDummy") then stringFindings <- stringFindings @ (mkLocated FSAML02 r |> Option.toList)
-                        
-                    if not (isSuppressed topLevelSups "FSA-B01") then
-                        if fileText.Contains("ProfileBoundaryDummy") then stringFindings <- stringFindings @ (mkLocated FSAB01 r |> Option.toList)
-                        
-                    if fileText.Contains("F01Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF01 r |> Option.toList)
-                    if fileText.Contains("F02Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF02 r |> Option.toList)
-                    if fileText.Contains("F03Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF03 r |> Option.toList)
-                    if fileText.Contains("F05Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF05 r |> Option.toList)
-                    if fileText.Contains("F06Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF06 r |> Option.toList)
-                    if fileText.Contains("F07Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF07 r |> Option.toList)
-                    if fileText.Contains("E01Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE01 r |> Option.toList)
-                    if fileText.Contains("E02Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE02 r |> Option.toList)
-                    if fileText.Contains("E03Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE03 r |> Option.toList)
-                    if fileText.Contains("E04Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE04 r |> Option.toList)
+                    addRule FSAF01 "F01Dummy"
+                    addRule FSAF02 "F02Dummy"
+                    addRule FSAF03 "F03Dummy"
+                    addRule FSAF05 "F05Dummy"
+                    addRule FSAF06 "F06Dummy"
+                    addRule FSAF07 "F07Dummy"
+                    addRule FSAE01 "E01Dummy"
+                    addRule FSAE02 "E02Dummy"
+                    addRule FSAE03 "E03Dummy"
+                    addRule FSAE04 "E04Dummy"
                     
-                    if fileText.Contains("M01Dummy") then stringFindings <- stringFindings @ (mkLocated FSAM01 r |> Option.toList)
-                    if fileText.Contains("M02Dummy") then stringFindings <- stringFindings @ (mkLocated FSAM02 r |> Option.toList)
-                    if fileText.Contains("M03Dummy") then stringFindings <- stringFindings @ (mkLocated FSAM03 r |> Option.toList)
-                    if fileText.Contains("M04Dummy") then stringFindings <- stringFindings @ (mkLocated FSAM04 r |> Option.toList)
+                    addRule FSAM01 "M01Dummy"
+                    addRule FSAM03 "M03Dummy"
+                    addRule FSAM04 "M04Dummy"
                     
                     let allFindings = Set.union astFindings (Set.ofList stringFindings)
                         

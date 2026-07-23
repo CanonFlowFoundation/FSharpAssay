@@ -1,6 +1,7 @@
 open System
 open System.Diagnostics
 open System.IO
+open System.Text.RegularExpressions
 open Argu
 
 type Arguments =
@@ -46,26 +47,26 @@ let main argv =
             let _ = printfn "Building repository to generate .dll and .fsi artifacts..."
             let (buildCode, buildOut, buildErr) = runProc "dotnet" "build -c Release" tempDir
             
-            let _ = 
-                if buildCode <> 0 then
-                    printfn "⚠️ Build failed. FsAssay will attempt a source-only scan."
-                else
-                    printfn "✅ Build succeeded."
-
-            let _ = printfn "Running FsAssay Engine on Target..."
-            let runnerDir = Directory.GetCurrentDirectory()
-            let runnerProj = Path.Combine(runnerDir, "FsAssay.Runner", "FsAssay.Runner.fsproj")
-            let (scanCode, scanOut, scanErr) = runProc "dotnet" (sprintf "run --project %s %s" runnerProj tempDir) runnerDir
-
-            let _ = printfn "\n--- SCAN RESULTS ---"
-            let _ = printfn "%s" scanOut
-
-            if scanOut.Contains("FSA-E0") || scanOut.Contains("FSA-C") || scanOut.Contains("FSA-F") then
-                let _ = printfn "🚨 ECOSYSTEM VERDICT: Shark (Failed Purity Tests)"
-                1
+            if buildCode <> 0 then
+                let _ = printfn "⚠️ Build failed. ECOSYSTEM VERDICT: Inconclusive"
+                2
             else
-                let _ = printfn "🐬 ECOSYSTEM VERDICT: Dolphin (Passed Elite F# Checks)"
-                0
+                let _ = printfn "✅ Build succeeded."
+                let _ = printfn "Running FsAssay Engine on Target..."
+                let runnerDir = Directory.GetCurrentDirectory()
+                let runnerProj = Path.Combine(runnerDir, "FsAssay.Runner", "FsAssay.Runner.fsproj")
+                let (scanCode, scanOut, scanErr) = runProc "dotnet" (sprintf "run --project %s %s" runnerProj tempDir) runnerDir
+
+                let _ = printfn "\n--- SCAN RESULTS ---"
+                let _ = printfn "%s" scanOut
+
+                let matchResult = Regex.Match(scanOut, @"Total Violations: (\d+)")
+                if matchResult.Success && matchResult.Groups.[1].Value <> "0" then
+                    let _ = printfn "🚨 ECOSYSTEM VERDICT: Shark (Failed Purity Tests)"
+                    1
+                else
+                    let _ = printfn "🐬 ECOSYSTEM VERDICT: Dolphin (Passed Elite F# Checks)"
+                    0
     with e ->
         let _ = printfn "%s" e.Message
         1

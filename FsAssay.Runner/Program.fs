@@ -12,7 +12,6 @@ type Arguments =
     | [<AltCommandLine("-t")>] Out_Toolchain of path:string
     | [<AltCommandLine("-r")>] RateCard_Md of path:string
     | [<AltCommandLine("-m")>] Material_Html of path:string
-    | [<AltCommandLine("-f")>] Fix
     | [<AltCommandLine("-w")>] Watch
     | [<AltCommandLine("-d")>] Diff of gitRef:string
     | [<AltCommandLine("-p")>] Serve of port:int
@@ -29,7 +28,6 @@ type Arguments =
                 | Out_Toolchain _ -> "Output file path for toolchain record."
                 | RateCard_Md _ -> "Output file path for Markdown Code Quality Rate Card."
                 | Material_Html _ -> "Output file path for Material Design 5 HTML Dashboard."
-                | Fix -> "Apply automated code refactoring fixes to target files."
                 | Watch -> "Watch directory for file changes and re-run scans continuously."
                 | Diff _ -> "Compare quality findings against a Git reference branch."
                 | Serve _ -> "Start live Material Design 5 HTML dashboard web server on specified port."
@@ -106,11 +104,6 @@ let main argv =
                                 printfn "\n❌ %s" file
                                 for v in violations do
                                     printfn "   └── [%s] %s (Line: %d, Col: %d)" v.Code v.Message v.Range.StartLine v.Range.StartColumn
-
-                            if results.Contains(Fix) then
-                                let fixedCount = AutoFix.applyAutoFixes file violations
-                                if fixedCount > 0 then
-                                    printfn "   ✨ Applied %d auto-fix(es) to %s" fixedCount file
                     | Skipped reason ->
                         skippedFiles <- skippedFiles + 1
                     | Failed fail ->
