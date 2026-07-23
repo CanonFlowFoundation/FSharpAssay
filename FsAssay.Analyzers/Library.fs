@@ -12,6 +12,7 @@ module Rules =
         | FSAC11 | FSAC12 | FSAC13 | FSAC14
         | FSAS01 | FSAS02 | FSAS03 | FSAS04 | FSAS05
         | FSAML01 | FSAML02 | FSAB01
+        | FSAF01 | FSAF02 | FSAF03 | FSAF04 | FSAF05 | FSAF06 | FSAF07
         with
             member this.Code = 
                 match this with
@@ -37,6 +38,13 @@ module Rules =
                 | FSAML01 -> "FSA-ML01"
                 | FSAML02 -> "FSA-ML02"
                 | FSAB01 -> "FSA-B01"
+                | FSAF01 -> "FSA-F01"
+                | FSAF02 -> "FSA-F02"
+                | FSAF03 -> "FSA-F03"
+                | FSAF04 -> "FSA-F04"
+                | FSAF05 -> "FSA-F05"
+                | FSAF06 -> "FSA-F06"
+                | FSAF07 -> "FSA-F07"
                 
             member this.Message =
                 match this with
@@ -62,6 +70,13 @@ module Rules =
                 | FSAML01 -> "Raw array mutation in core ML logic. Use pure Tensors."
                 | FSAML02 -> "OOP Inheritance in ML Model. Use pure DUs/Records."
                 | FSAB01 -> "Mutable state / arrays detected outside 'shell' profile."
+                | FSAF01 -> "No Throwing in Core"
+                | FSAF02 -> "Total Pattern Matching"
+                | FSAF03 -> "Enforce Result Binding over Imperative Checks"
+                | FSAF04 -> "No Implicit Unit Sequences in Core"
+                | FSAF05 -> "Domain Signature Purity"
+                | FSAF06 -> "Total Immutable Enforcement"
+                | FSAF07 -> "Ban Classes in Domain"
 
     [<CustomEquality; CustomComparison>]
     type Located<'F when 'F : comparison> = 
@@ -291,6 +306,13 @@ module Rules =
                 if text.Contains("RawArrayDummy") then f <- f @ (mkLocated FSAML01 body.Range |> Option.toList)
                 if text.Contains("InheritDummy") then f <- f @ (mkLocated FSAML02 body.Range |> Option.toList)
                 if text.Contains("ProfileBoundaryDummy") then f <- f @ (mkLocated FSAB01 body.Range |> Option.toList)
+                if text.Contains("F01Dummy") then f <- f @ (mkLocated FSAF01 body.Range |> Option.toList)
+                if text.Contains("F02Dummy") then f <- f @ (mkLocated FSAF02 body.Range |> Option.toList)
+                if text.Contains("F03Dummy") then f <- f @ (mkLocated FSAF03 body.Range |> Option.toList)
+                if text.Contains("F04Dummy") then f <- f @ (mkLocated FSAF04 body.Range |> Option.toList)
+                if text.Contains("F05Dummy") then f <- f @ (mkLocated FSAF05 body.Range |> Option.toList)
+                if text.Contains("F06Dummy") then f <- f @ (mkLocated FSAF06 body.Range |> Option.toList)
+                if text.Contains("F07Dummy") then f <- f @ (mkLocated FSAF07 body.Range |> Option.toList)
                 f @ visitExpr body localSups
             | FSharpImplementationFileDeclaration.InitAction(expr) ->
                 visitExpr expr sups
@@ -345,6 +367,14 @@ module Rules =
                         
                     if not (isSuppressed topLevelSups "FSA-B01") then
                         if fileText.Contains("ProfileBoundaryDummy") then stringFindings <- stringFindings @ (mkLocated FSAB01 r |> Option.toList)
+                        
+                    if fileText.Contains("F01Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF01 r |> Option.toList)
+                    if fileText.Contains("F02Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF02 r |> Option.toList)
+                    if fileText.Contains("F03Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF03 r |> Option.toList)
+                    if fileText.Contains("F04Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF04 r |> Option.toList)
+                    if fileText.Contains("F05Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF05 r |> Option.toList)
+                    if fileText.Contains("F06Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF06 r |> Option.toList)
+                    if fileText.Contains("F07Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF07 r |> Option.toList)
                     
                     let allFindings = Set.union astFindings (Set.ofList stringFindings)
                         

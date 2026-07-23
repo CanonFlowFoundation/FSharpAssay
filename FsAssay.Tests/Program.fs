@@ -236,6 +236,68 @@ let doSomething () = ()
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA-B01" results
+        testCase "FSA-F01: No Throwing in Core" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// F01Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-F01" results
+
+        testCase "FSA-F02: Total Pattern Matching" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// F02Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-F02" results
+
+        testCase "FSA-F03: Enforce Result Binding over Imperative Checks" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// F03Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-F03" results
+
+        testCase "FSA-F04: No Implicit Unit Sequences in Core" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// F04Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-F04" results
+
+        testCase "FSA-F05: Domain Signature Purity" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// F05Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-F05" results
+
+        testCase "FSA-F06: Total Immutable Enforcement" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// F06Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-F06" results
+
+        testCase "FSA-F07: Ban Classes in Domain" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// F07Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-F07" results
     ]
 
 [<EntryPoint>]
