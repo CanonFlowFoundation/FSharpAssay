@@ -137,13 +137,25 @@ module Rules =
         (sups |> List.contains "PROFILE:shell" && (code = "FSA-ML01" || code = "FSA-B01" || code = "FSA-C14"))
 
     let toMessage (loc: Located<Rule>) : Message =
+        let fixes = 
+            match loc.Finding with
+            | FSAC03 -> // Async.RunSynchronously
+                [{ FromRange = loc.Range; FromText = "Async.RunSynchronously"; ToText = "Async.AwaitTask" }]
+            | FSAC04 -> // use and Async.Start
+                [{ FromRange = loc.Range; FromText = "Async.Start"; ToText = "Async.StartChild" }]
+            | FSAC09 -> // isNull
+                [{ FromRange = loc.Range; FromText = "isNull"; ToText = "Option.isNone" }]
+            | FSAC11 -> // Use _.Property
+                [{ FromRange = loc.Range; FromText = "fun x -> x."; ToText = "_." }]
+            | _ -> []
+            
         {
             Type = loc.Finding.Code
             Message = loc.Finding.Message
             Code = loc.Finding.Code
             Severity = if loc.Finding.Code.StartsWith("FSA-S") then Severity.Warning else Severity.Error
             Range = loc.Range
-            Fixes = []
+            Fixes = fixes
         }
 
     let analyzeDecl (decl: FSharpImplementationFileDeclaration) (topSups: string list) (sourceText: ISourceText) : Set<Located<Rule>> =
