@@ -21,15 +21,15 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore Dependencies
-        run: dotnet restore FsAssay.sln
+        run: dotnet restore FsAssay.slnx
 
       - name: Build FsAssay Solution
-        run: dotnet build FsAssay.sln -c Release --no-restore
+        run: dotnet build FsAssay.slnx -c Release --no-restore
 
       - name: Run FsAssay Audit Engine
         run: |
           dotnet run --project FsAssay.Runner -c Release -- \
-            ./FsAssay.sln \
+            ./FsAssay.slnx \
             --s results.sarif \
             -r ratecard.md \
             -m dashboard.html
@@ -46,4 +46,4 @@ jobs:
 
       - name: Enforce FsAssay Quality Gate
         run: |
-          dotnet run --project FsAssay.Runner -c Release -- ./FsAssay.sln
+          dotnet run --project FsAssay.Runner -c Release -- ./FsAssay.slnx
