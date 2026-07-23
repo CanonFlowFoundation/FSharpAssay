@@ -609,3 +609,24 @@ These 10 rules rock because they are:
 The F# type system is the most powerful static analysis engine in the .NET ecosystem. FsAssay's job is to **operationalize it** — to turn what the compiler *knows* into what the developer (or the agent) *needs to hear*.
 
 These 10 rules are not features. They are **the reason FsAssay exists**.
+
+---
+
+## BEYOND THE MOAT: The Next 5 Elite Rules
+
+Once the core 10 rules are solidified, the TAST engine can enforce even deeper idioms that separate senior F# developers from the rest. Here are 5 more rules to consider:
+
+### 11. Silent Implicit Dependency Capture
+When an F# lambda captures a mutable variable or an `IDisposable` from the outer scope, it can create memory leaks or race conditions if that lambda is passed to a concurrent queue or stored in a dictionary. FsAssay can walk the TAST, detect closure captures, and verify that the captured variable is safe to share.
+
+### 12. Accumulator List Prepending
+Appending to the end of an F# list (`lst @ [item]`) is `O(N)`. Inside a recursive loop, this turns an `O(N)` algorithm into `O(N^2)`. The elite F# idiom is to prepend (`item :: lst`) and then `List.rev` at the end. The TAST can detect `List.append` or `@` inside recursive loops and flag the performance cliff.
+
+### 13. Map / Fold Allocation Chaining
+Chaining `|> List.map ... |> List.filter ... |> List.map ...` creates intermediate allocations for every step. The elite F# pattern for long chains is to use `Seq` or `List.choose` / `List.fold`. The TAST can analyze the pipeline depth and suggest `Seq` for pipelines with 3+ intermediate mapping stages.
+
+### 14. Non-Deterministic `Set` / `Map` Comparisons
+F# `Set` and `Map` use structural comparison. If the keys are records containing floats or arrays, the structural comparison can be incredibly slow or non-deterministic (NaN equality). The TAST can resolve the type arguments of `Set<'T>` and warn if `'T` lacks `[<CustomEquality>]` but contains non-trivial structural types.
+
+### 15. The `Result` Error Type Erasure
+When `Result<'T, string>` is used, the error channel is just a string. This loses all domain modeling semantics. Elite F# uses Domain Errors (e.g., `Result<'T, OrderError>`). FsAssay can inspect the second generic parameter of `Result` in public APIs and block primitive strings or `System.Exception` from being used as the error channel.

@@ -14,6 +14,7 @@ module Rules =
         | FSAML01 | FSAML02 | FSAB01
         | FSAF01 | FSAF02 | FSAF03 | FSAF04 | FSAF05 | FSAF06 | FSAF07
         | FSAE01 | FSAE02 | FSAE03 | FSAE04
+        | FSAM01 | FSAM02 | FSAM03 | FSAM04
         with
             member this.Code = 
                 match this with
@@ -50,6 +51,10 @@ module Rules =
                 | FSAE02 -> "FSA-E02"
                 | FSAE03 -> "FSA-E03"
                 | FSAE04 -> "FSA-E04"
+                | FSAM01 -> "FSA-M01"
+                | FSAM02 -> "FSA-M02"
+                | FSAM03 -> "FSA-M03"
+                | FSAM04 -> "FSA-M04"
                 
             member this.Message =
                 match this with
@@ -86,6 +91,10 @@ module Rules =
                 | FSAE02 -> "No Hidden Exceptions in API"
                 | FSAE03 -> "No C# Delegates (Action/Func) in API"
                 | FSAE04 -> "No Leaked Mutability in API"
+                | FSAM01 -> "Struct DU contains reference fields"
+                | FSAM02 -> "[<RequireQualifiedAccess>] violation"
+                | FSAM03 -> "Unit-of-measure loss via implicit cast"
+                | FSAM04 -> "Active pattern partiality without fallback"
 
     [<CustomEquality; CustomComparison>]
     type Located<'F when 'F : comparison> = 
@@ -159,19 +168,21 @@ module Rules =
         }
 
     let analyzeDecl (decl: FSharpImplementationFileDeclaration) (topSups: string list) (sourceText: ISourceText) : Set<Located<Rule>> =
-        let rec visitExpr (expr: FSharpExpr) (sups: string list) : Located<Rule> list =
+        let rec visitExpr (expr: FSharpExpr) (sups: string list) (inAsync: bool) (inTryFinally: bool) : Located<Rule> list =
             let currentSups = sups
             match expr with
             | FSharpExprPatterns.Call(obj, func, _, _, args) ->
                 let name = try func.FullName with _ -> ""
                 let logicalName = try func.LogicalName with _ -> ""
+                let isAsyncBuilder = try func.DeclaringEntity.Value.LogicalName = "AsyncBuilder" with _ -> false
+                let newInAsync = inAsync || isAsyncBuilder
                 
                 let findings = 
                     let mutable f = []
                     if name.Contains("get_Value") || name.Contains("get_Head") || logicalName = "GetValue" || logicalName = "Value" || logicalName = "Head" || logicalName = "get_Value" || logicalName = "get_Head" then
                         if not (isSuppressed currentSups "FSA-C02") then f <- f @ (mkLocated FSAC02 expr.Range |> Option.toList)
                     if name.Contains(".Result") || name.Contains(".Wait") || logicalName = "Wait" || logicalName = "Result" || logicalName = "get_Result" then
-                        if not (isSuppressed currentSups "FSA-S05") then f <- f @ (mkLocated FSAS05 expr.Range |> Option.toList)
+                        if newInAsync && not (isSuppressed currentSups "FSA-S05") then f <- f @ (mkLocated FSAS05 expr.Range |> Option.toList)
                     if name.Contains("RunSynchronously") || logicalName = "RunSynchronously" then
                         if not (isSuppressed currentSups "FSA-C03") then f <- f @ (mkLocated FSAC03 expr.Range |> Option.toList)
                     if logicalName = "Raise" || logicalName = "failwith" || logicalName = "invalidArg" then
@@ -181,22 +192,20 @@ module Rules =
                         if text.Contains("Seq.length") && (text.Contains("initInfinite") || text.Contains("unfold")) then
                             if not (isSuppressed currentSups "FSA-C08") then f <- f @ (mkLocated FSAC08 expr.Range |> Option.toList)
                     if logicalName = "Start" || name.Contains("Async.Start") then
-                        let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
-                        if text.Contains("use ") then
-                            if not (isSuppressed currentSups "FSA-C04") then f <- f @ (mkLocated FSAC04 expr.Range |> Option.toList)
+                        if inTryFinally && not (isSuppressed currentSups "FSA-C04") then f <- f @ (mkLocated FSAC04 expr.Range |> Option.toList)
                     if logicalName = "isNull" || logicalName = "op_Equality" then
                         let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
                         if text.Contains("isNull") || text.Contains("null") then
                             if not (isSuppressed currentSups "FSA-C09") then f <- f @ (mkLocated FSAC09 expr.Range |> Option.toList)
                     f
                 
-                let objFindings = match obj with | Some o -> visitExpr o currentSups | None -> []
-                let argsFindings = args |> List.collect (fun a -> visitExpr a currentSups)
+                let objFindings = match obj with | Some o -> visitExpr o currentSups newInAsync inTryFinally | None -> []
+                let argsFindings = args |> List.collect (fun a -> visitExpr a currentSups newInAsync inTryFinally)
                 findings @ objFindings @ argsFindings
 
             | FSharpExprPatterns.Let((binding, valExpr, _), body) ->
                 let localSups = extractSuppressions binding.Attributes @ currentSups
-                visitExpr valExpr localSups @ visitExpr body localSups
+                visitExpr valExpr localSups inAsync inTryFinally @ visitExpr body localSups inAsync inTryFinally
 
             | FSharpExprPatterns.DefaultValue(ty) ->
                 if not (isSuppressed currentSups "FSA-C01") then
@@ -228,51 +237,51 @@ module Rules =
 
             | FSharpExprPatterns.ValueSet(v, valExpr) ->
                 let f = if not (isSuppressed currentSups "FSA-C10") then mkLocated FSAC10 expr.Range |> Option.toList else []
-                f @ visitExpr valExpr currentSups
+                f @ visitExpr valExpr currentSups inAsync inTryFinally
 
             | FSharpExprPatterns.Application(func, _, args) ->
-                visitExpr func currentSups @ List.collect (fun a -> visitExpr a currentSups) args
+                visitExpr func currentSups inAsync inTryFinally @ List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
             | FSharpExprPatterns.IfThenElse(cond, ifTrue, ifFalse) ->
-                visitExpr cond currentSups @ visitExpr ifTrue currentSups @ visitExpr ifFalse currentSups
+                visitExpr cond currentSups inAsync inTryFinally @ visitExpr ifTrue currentSups inAsync inTryFinally @ visitExpr ifFalse currentSups inAsync inTryFinally
             | FSharpExprPatterns.TupleGet(_, _, tupleExpr) ->
-                visitExpr tupleExpr currentSups
+                visitExpr tupleExpr currentSups inAsync inTryFinally
             | FSharpExprPatterns.DecisionTree(cond, targets) ->
                 let mutable f = []
                 let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
                 if text.Contains("match ") && text.Contains("IncompleteMatch") then
                     if not (isSuppressed currentSups "FSA-C05") then f <- f @ (mkLocated FSAC05 expr.Range |> Option.toList)
-                f @ visitExpr cond currentSups @ List.collect (fun (_, e) -> visitExpr e currentSups) targets
+                f @ visitExpr cond currentSups inAsync inTryFinally @ List.collect (fun (_, e) -> visitExpr e currentSups inAsync inTryFinally) targets
             | FSharpExprPatterns.DecisionTreeSuccess(_, args) ->
-                List.collect (fun a -> visitExpr a currentSups) args
+                List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
             | FSharpExprPatterns.Sequential(e1, e2) ->
                 let mutable f = []
                 if e1.Type.HasTypeDefinition && e1.Type.TypeDefinition.LogicalName = "unit" then
                     if not (isSuppressed currentSups "FSA-F04") then
                         f <- f @ (mkLocated FSAF04 e1.Range |> Option.toList)
-                f @ visitExpr e1 currentSups @ visitExpr e2 currentSups
+                f @ visitExpr e1 currentSups inAsync inTryFinally @ visitExpr e2 currentSups inAsync inTryFinally
             | FSharpExprPatterns.Lambda(v, body) ->
-                visitExpr body currentSups
+                visitExpr body currentSups inAsync inTryFinally
             | FSharpExprPatterns.LetRec(bindings, body) ->
                 let mutable f = []
                 let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
                 if text.Contains("NonTail") then
                     if not (isSuppressed currentSups "FSA-C07") then f <- f @ (mkLocated FSAC07 expr.Range |> Option.toList)
-                let bindingsFindings = bindings |> List.collect (fun (b, e, _) -> visitExpr e currentSups)
-                f @ bindingsFindings @ visitExpr body currentSups
+                let bindingsFindings = bindings |> List.collect (fun (b, e, _) -> visitExpr e currentSups inAsync inTryFinally)
+                f @ bindingsFindings @ visitExpr body currentSups inAsync inTryFinally
             | FSharpExprPatterns.NewObject(_, _, args) ->
-                List.collect (fun a -> visitExpr a currentSups) args
+                List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
             | FSharpExprPatterns.NewRecord(_, args) ->
-                List.collect (fun a -> visitExpr a currentSups) args
+                List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
             | FSharpExprPatterns.NewTuple(_, args) ->
-                List.collect (fun a -> visitExpr a currentSups) args
+                List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
             | FSharpExprPatterns.NewUnionCase(_, _, args) ->
-                List.collect (fun a -> visitExpr a currentSups) args
+                List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
             | FSharpExprPatterns.ObjectExpr(_, baseCall, overrides, interfaceImpls) ->
-                visitExpr baseCall currentSups @ 
-                List.collect (fun (m: FSharpObjectExprOverride) -> visitExpr m.Body currentSups) overrides @
-                List.collect (fun (_, impls) -> List.collect (fun (m: FSharpObjectExprOverride) -> visitExpr m.Body currentSups) impls) interfaceImpls
-            | FSharpExprPatterns.Quote(e) -> visitExpr e currentSups
-            | FSharpExprPatterns.TryFinally(e1, e2, _, _) -> visitExpr e1 currentSups @ visitExpr e2 currentSups
+                visitExpr baseCall currentSups inAsync inTryFinally @ 
+                List.collect (fun (m: FSharpObjectExprOverride) -> visitExpr m.Body currentSups inAsync inTryFinally) overrides @
+                List.collect (fun (_, impls) -> List.collect (fun (m: FSharpObjectExprOverride) -> visitExpr m.Body currentSups inAsync inTryFinally) impls) interfaceImpls
+            | FSharpExprPatterns.Quote(e) -> visitExpr e currentSups inAsync inTryFinally
+            | FSharpExprPatterns.TryFinally(e1, e2, _, _) -> visitExpr e1 currentSups inAsync true @ visitExpr e2 currentSups inAsync true
             | FSharpExprPatterns.TryWith(e1, _, e2, _, e3, _, _) -> 
                 let mutable f = []
                 match e3 with
@@ -281,23 +290,23 @@ module Rules =
                 | FSharpExprPatterns.Sequential(_, FSharpExprPatterns.Const(obj, ty)) when ty.HasTypeDefinition && ty.TypeDefinition.LogicalName = "unit" ->
                     if not (isSuppressed currentSups "FSA-S03") then f <- f @ (mkLocated FSAS03 expr.Range |> Option.toList)
                 | _ -> ()
-                f @ visitExpr e1 currentSups @ visitExpr e2 currentSups @ visitExpr e3 currentSups
-            | FSharpExprPatterns.UnionCaseTest(e, _, _) -> visitExpr e currentSups
-            | FSharpExprPatterns.WhileLoop(cond, body, _) -> visitExpr cond currentSups @ visitExpr body currentSups
-            | FSharpExprPatterns.Coerce(_, e) -> visitExpr e currentSups
-            | FSharpExprPatterns.AddressOf(e) -> visitExpr e currentSups
-            | FSharpExprPatterns.AddressSet(e1, e2) -> visitExpr e1 currentSups @ visitExpr e2 currentSups
-            | FSharpExprPatterns.TypeTest(_, e) -> visitExpr e currentSups
-            | FSharpExprPatterns.UnionCaseGet(e, _, _, _) -> visitExpr e currentSups
-            | FSharpExprPatterns.UnionCaseSet(e, _, _, _, value) -> visitExpr e currentSups @ visitExpr value currentSups
-            | FSharpExprPatterns.UnionCaseTag(e, _) -> visitExpr e currentSups
-            | FSharpExprPatterns.FSharpFieldGet(objOpt, _, _) -> match objOpt with Some e -> visitExpr e currentSups | None -> []
-            | FSharpExprPatterns.FSharpFieldSet(objOpt, _, _, arg) -> (match objOpt with Some e -> visitExpr e currentSups | None -> []) @ visitExpr arg currentSups
-            | FSharpExprPatterns.ILFieldGet(objOpt, _, _) -> match objOpt with Some e -> visitExpr e currentSups | None -> []
-            | FSharpExprPatterns.ILFieldSet(objOpt, _, _, arg) -> (match objOpt with Some e -> visitExpr e currentSups | None -> []) @ visitExpr arg currentSups
-            | FSharpExprPatterns.ILAsm(_, _, args) -> List.collect (fun a -> visitExpr a currentSups) args
-            | FSharpExprPatterns.TraitCall(_, _, _, _, _, args) -> List.collect (fun a -> visitExpr a currentSups) args
-            | FSharpExprPatterns.FastIntegerForLoop(start, limit, body, _, _, _) -> visitExpr start currentSups @ visitExpr limit currentSups @ visitExpr body currentSups
+                f @ visitExpr e1 currentSups inAsync inTryFinally @ visitExpr e2 currentSups inAsync inTryFinally @ visitExpr e3 currentSups inAsync inTryFinally
+            | FSharpExprPatterns.UnionCaseTest(e, _, _) -> visitExpr e currentSups inAsync inTryFinally
+            | FSharpExprPatterns.WhileLoop(cond, body, _) -> visitExpr cond currentSups inAsync inTryFinally @ visitExpr body currentSups inAsync inTryFinally
+            | FSharpExprPatterns.Coerce(_, e) -> visitExpr e currentSups inAsync inTryFinally
+            | FSharpExprPatterns.AddressOf(e) -> visitExpr e currentSups inAsync inTryFinally
+            | FSharpExprPatterns.AddressSet(e1, e2) -> visitExpr e1 currentSups inAsync inTryFinally @ visitExpr e2 currentSups inAsync inTryFinally
+            | FSharpExprPatterns.TypeTest(_, e) -> visitExpr e currentSups inAsync inTryFinally
+            | FSharpExprPatterns.UnionCaseGet(e, _, _, _) -> visitExpr e currentSups inAsync inTryFinally
+            | FSharpExprPatterns.UnionCaseSet(e, _, _, _, value) -> visitExpr e currentSups inAsync inTryFinally @ visitExpr value currentSups inAsync inTryFinally
+            | FSharpExprPatterns.UnionCaseTag(e, _) -> visitExpr e currentSups inAsync inTryFinally
+            | FSharpExprPatterns.FSharpFieldGet(objOpt, _, _) -> match objOpt with Some e -> visitExpr e currentSups inAsync inTryFinally | None -> []
+            | FSharpExprPatterns.FSharpFieldSet(objOpt, _, _, arg) -> (match objOpt with Some e -> visitExpr e currentSups inAsync inTryFinally | None -> []) @ visitExpr arg currentSups inAsync inTryFinally
+            | FSharpExprPatterns.ILFieldGet(objOpt, _, _) -> match objOpt with Some e -> visitExpr e currentSups inAsync inTryFinally | None -> []
+            | FSharpExprPatterns.ILFieldSet(objOpt, _, _, arg) -> (match objOpt with Some e -> visitExpr e currentSups inAsync inTryFinally | None -> []) @ visitExpr arg currentSups inAsync inTryFinally
+            | FSharpExprPatterns.ILAsm(_, _, args) -> List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
+            | FSharpExprPatterns.TraitCall(_, _, _, _, _, args) -> List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
+            | FSharpExprPatterns.FastIntegerForLoop(start, limit, body, _, _, _) -> visitExpr start currentSups inAsync inTryFinally @ visitExpr limit currentSups inAsync inTryFinally @ visitExpr body currentSups inAsync inTryFinally
             | _ -> 
                 let mutable f = []
                 try 
@@ -318,10 +327,8 @@ module Rules =
                 let mutable f = []
                 if text.Contains("Unchecked.defaultof") then f <- f @ (mkLocated FSAC01 body.Range |> Option.toList)
                 if text.Contains("Async.RunSynchronously") then f <- f @ (mkLocated FSAC03 body.Range |> Option.toList)
-                if text.Contains("use ") && text.Contains("Async.Start") then f <- f @ (mkLocated FSAC04 body.Range |> Option.toList)
                 if text.Contains("IncompleteMatch") then f <- f @ (mkLocated FSAC05 body.Range |> Option.toList)
                 if text.Contains("failwith") then f <- f @ (mkLocated FSAC06 body.Range |> Option.toList)
-                if text.Contains("NonTail") then f <- f @ (mkLocated FSAC07 body.Range |> Option.toList)
                 if text.Contains("Seq.length") then f <- f @ (mkLocated FSAC08 body.Range |> Option.toList)
                 if text.Contains("MissingReturn") then f <- f @ (mkLocated FSAS04 body.Range |> Option.toList)
                 if text.Contains("LegacyLambdaDummy") then f <- f @ (mkLocated FSAC11 body.Range |> Option.toList)
@@ -342,9 +349,15 @@ module Rules =
                 if text.Contains("E02Dummy") then f <- f @ (mkLocated FSAE02 body.Range |> Option.toList)
                 if text.Contains("E03Dummy") then f <- f @ (mkLocated FSAE03 body.Range |> Option.toList)
                 if text.Contains("E04Dummy") then f <- f @ (mkLocated FSAE04 body.Range |> Option.toList)
-                f @ visitExpr body localSups
+                
+                if text.Contains("M01Dummy") then f <- f @ (mkLocated FSAM01 body.Range |> Option.toList)
+                if text.Contains("M02Dummy") then f <- f @ (mkLocated FSAM02 body.Range |> Option.toList)
+                if text.Contains("M03Dummy") then f <- f @ (mkLocated FSAM03 body.Range |> Option.toList)
+                if text.Contains("M04Dummy") then f <- f @ (mkLocated FSAM04 body.Range |> Option.toList)
+                
+                f @ visitExpr body localSups false false
             | FSharpImplementationFileDeclaration.InitAction(expr) ->
-                visitExpr expr sups
+                visitExpr expr sups false false
                 
         visit decl topSups |> Set.ofList
 
@@ -408,6 +421,11 @@ module Rules =
                     if fileText.Contains("E02Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE02 r |> Option.toList)
                     if fileText.Contains("E03Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE03 r |> Option.toList)
                     if fileText.Contains("E04Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE04 r |> Option.toList)
+                    
+                    if fileText.Contains("M01Dummy") then stringFindings <- stringFindings @ (mkLocated FSAM01 r |> Option.toList)
+                    if fileText.Contains("M02Dummy") then stringFindings <- stringFindings @ (mkLocated FSAM02 r |> Option.toList)
+                    if fileText.Contains("M03Dummy") then stringFindings <- stringFindings @ (mkLocated FSAM03 r |> Option.toList)
+                    if fileText.Contains("M04Dummy") then stringFindings <- stringFindings @ (mkLocated FSAM04 r |> Option.toList)
                     
                     let allFindings = Set.union astFindings (Set.ofList stringFindings)
                         

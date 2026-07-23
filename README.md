@@ -218,6 +218,25 @@ FsAssay addresses the shortage of public F# training data in two ways:
 
 ---
 
+### 🛡 Tier 6: The 10 Moat Rules (`FSA-M01` – `FSA-M10`)
+
+These 10 rules form the **FsAssay Moat**. They exploit F#'s type system as a detection engine to catch semantic bugs that no regex or C# analyzer can see.
+
+| Rule ID | Rule Name | Description | TAST Requirement |
+| :--- | :--- | :--- | :--- |
+| **`FSA-C05`** | **Incomplete DU Match** | DU match missing cases. | Resolve union cases |
+| **`FSA-C04`** | **`use` + `Async.Start`** | `use` scope exiting before async runs. | Scope + async flow |
+| **`FSA-C07`** | **Non-tail `let rec`** | Recursive call not in tail position. | Control flow position |
+| **`FSA-C02`** | **`Option.get` in pipeline** | Unguarded `.get` without `filter`/`match`. | Type resolution |
+| **`FSA-S04`** | **`async { }` without return** | Computed value is silently discarded. | CE desugaring |
+| **`FSA-S05`** | **`Task.Result` in async** | Blocking `.Result` inside `async { }` deadlocks. | Enclosing CE scope |
+| **`FSA-M01`** | **Struct DU Ref Fields** | `[<Struct>]` DU containing `string`/`list`. | Type + field traits |
+| **`FSA-M02`** | **`[<RequireQualifiedAccess>]`** | Unqualified DU case access violation. | Attribute resolution |
+| **`FSA-M03`** | **Unit-of-measure loss** | `float<m>` cast to bare `float`. | Erased measure types |
+| **`FSA-M04`** | **Active Pattern Partiality** | `(\|A\|)` used in match without fallback. | Signature + pattern matching |
+
+---
+
 ## 🦈 The Ecosystem Scanner (`FSA-ECO`)
 
 FsAssay doesn't just lint local projects; it includes a weaponized CLI designed to hunt pure/impure F# repositories on GitHub.

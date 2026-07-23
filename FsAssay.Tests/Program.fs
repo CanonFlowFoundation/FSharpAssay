@@ -335,6 +335,42 @@ let doSomething () = ()
             let results = runFsAssay sourceCode
             expectViolation "FSA-E04" results
 
+        testCase "FSA-M01: Struct DU contains reference fields" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// M01Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-M01" results
+
+        testCase "FSA-M02: [<RequireQualifiedAccess>] violation" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// M02Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-M02" results
+
+        testCase "FSA-M03: Unit-of-measure loss via implicit cast" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// M03Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-M03" results
+
+        testCase "FSA-M04: Active pattern partiality without fallback" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// M04Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-M04" results
+
         testCase "Roslyn Parity: Code Fixes" <| fun _ ->
             let sourceCode = """
 module BadCode
