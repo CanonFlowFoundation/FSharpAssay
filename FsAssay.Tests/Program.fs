@@ -266,8 +266,9 @@ let doSomething () = ()
         testCase "FSA-F04: No Implicit Unit Sequences in Core" <| fun _ ->
             let sourceCode = """
 module BadCode
-// F04Dummy trigger
-let doSomething () = ()
+let doSomething () =
+    printfn "Side effect"
+    5
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA-F04" results

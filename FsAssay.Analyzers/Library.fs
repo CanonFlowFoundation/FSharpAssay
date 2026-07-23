@@ -233,7 +233,11 @@ module Rules =
             | FSharpExprPatterns.DecisionTreeSuccess(_, args) ->
                 List.collect (fun a -> visitExpr a currentSups) args
             | FSharpExprPatterns.Sequential(e1, e2) ->
-                visitExpr e1 currentSups @ visitExpr e2 currentSups
+                let mutable f = []
+                if e1.Type.HasTypeDefinition && e1.Type.TypeDefinition.LogicalName = "unit" then
+                    if not (isSuppressed currentSups "FSA-F04") then
+                        f <- f @ (mkLocated FSAF04 e1.Range |> Option.toList)
+                f @ visitExpr e1 currentSups @ visitExpr e2 currentSups
             | FSharpExprPatterns.Lambda(v, body) ->
                 visitExpr body currentSups
             | FSharpExprPatterns.LetRec(bindings, body) ->
@@ -384,7 +388,6 @@ module Rules =
                     if fileText.Contains("F01Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF01 r |> Option.toList)
                     if fileText.Contains("F02Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF02 r |> Option.toList)
                     if fileText.Contains("F03Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF03 r |> Option.toList)
-                    if fileText.Contains("F04Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF04 r |> Option.toList)
                     if fileText.Contains("F05Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF05 r |> Option.toList)
                     if fileText.Contains("F06Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF06 r |> Option.toList)
                     if fileText.Contains("F07Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF07 r |> Option.toList)
