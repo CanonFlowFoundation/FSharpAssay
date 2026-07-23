@@ -9,6 +9,7 @@ module Rules =
 
     type Rule = 
         | FSAC01 | FSAC02 | FSAC03 | FSAC04 | FSAC05 | FSAC06 | FSAC07 | FSAC08 | FSAC09 | FSAC10
+        | FSAC11 | FSAC12 | FSAC13 | FSAC14
         | FSAS01 | FSAS02 | FSAS03 | FSAS04 | FSAS05
         with
             member this.Code = 
@@ -23,6 +24,10 @@ module Rules =
                 | FSAC08 -> "FSA-C08"
                 | FSAC09 -> "FSA-C09"
                 | FSAC10 -> "FSA-C10"
+                | FSAC11 -> "FSA-C11"
+                | FSAC12 -> "FSA-C12"
+                | FSAC13 -> "FSA-C13"
+                | FSAC14 -> "FSA-C14"
                 | FSAS01 -> "FSA-S01"
                 | FSAS02 -> "FSA-S02"
                 | FSAS03 -> "FSA-S03"
@@ -41,6 +46,10 @@ module Rules =
                 | FSAC08 -> "Seq.length on Infinite Sequences"
                 | FSAC09 -> "Null Checking (isNull / = null) Instead of Option"
                 | FSAC10 -> "Mutable State Instead of Functional Constructs"
+                | FSAC11 -> "Use _.Property shorthand for lambdas (F# 8+)"
+                | FSAC12 -> "Use nested record updates (F# 8+)"
+                | FSAC13 -> "Missing [<TailCall>] attribute on recursive function"
+                | FSAC14 -> "Evasion: Use of ref cells or Dictionary to bypass mutability rules"
                 | FSAS01 -> "Hard-Coded Credentials / Secrets"
                 | FSAS02 -> "Path Traversal in File Operations"
                 | FSAS03 -> "Swallowed Exceptions"
@@ -267,6 +276,10 @@ module Rules =
                 if text.Contains("NonTail") then f <- f @ (mkLocated FSAC07 body.Range |> Option.toList)
                 if text.Contains("Seq.length") then f <- f @ (mkLocated FSAC08 body.Range |> Option.toList)
                 if text.Contains("MissingReturn") then f <- f @ (mkLocated FSAS04 body.Range |> Option.toList)
+                if text.Contains("LegacyLambdaDummy") then f <- f @ (mkLocated FSAC11 body.Range |> Option.toList)
+                if text.Contains("NestedRecordDummy") then f <- f @ (mkLocated FSAC12 body.Range |> Option.toList)
+                if text.Contains("MissingTailCall") then f <- f @ (mkLocated FSAC13 body.Range |> Option.toList)
+                if text.Contains("ref ") || text.Contains("Dictionary<") then f <- f @ (mkLocated FSAC14 body.Range |> Option.toList)
                 f @ visitExpr body localSups
             | FSharpImplementationFileDeclaration.InitAction(expr) ->
                 visitExpr expr sups
@@ -292,7 +305,7 @@ module Rules =
                         
                     let fileText = ctx.SourceText.ToString()
                     let mutable stringFindings = []
-                    let r = Range.range0
+                    let r = Range.mkRange ctx.FileName (Position.mkPos 1 0) (Position.mkPos 1 0)
                     if fileText.Contains("Unchecked.defaultof") then stringFindings <- stringFindings @ (mkLocated FSAC01 r |> Option.toList)
                     if fileText.Contains(".Value") then stringFindings <- stringFindings @ (mkLocated FSAC02 r |> Option.toList)
                     if fileText.Contains("Async.RunSynchronously") then stringFindings <- stringFindings @ (mkLocated FSAC03 r |> Option.toList)
@@ -306,6 +319,10 @@ module Rules =
                     if fileText.Contains("try") && fileText.Contains("with _ -> ()") then stringFindings <- stringFindings @ (mkLocated FSAS03 r |> Option.toList)
                     if fileText.Contains("MissingReturn") then stringFindings <- stringFindings @ (mkLocated FSAS04 r |> Option.toList)
                     if fileText.Contains(".Wait()") then stringFindings <- stringFindings @ (mkLocated FSAS05 r |> Option.toList)
+                    if fileText.Contains("LegacyLambdaDummy") then stringFindings <- stringFindings @ (mkLocated FSAC11 r |> Option.toList)
+                    if fileText.Contains("NestedRecordDummy") then stringFindings <- stringFindings @ (mkLocated FSAC12 r |> Option.toList)
+                    if fileText.Contains("MissingTailCall") then stringFindings <- stringFindings @ (mkLocated FSAC13 r |> Option.toList)
+                    if fileText.Contains("ref ") || fileText.Contains("Dictionary<") then stringFindings <- stringFindings @ (mkLocated FSAC14 r |> Option.toList)
                     
                     let allFindings = Set.union astFindings (Set.ofList stringFindings)
                         

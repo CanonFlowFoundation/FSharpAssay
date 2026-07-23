@@ -170,6 +170,45 @@ let doSomething () =
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA-S05" results
+
+        testCase "FSA-C11: Legacy Lambda Property Access" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// LegacyLambdaDummy
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C11" results
+
+        testCase "FSA-C12: Verbose Nested Record Updates" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// NestedRecordDummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C12" results
+
+        testCase "FSA-C13: Missing TailCall Attribute" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// MissingTailCall trigger
+let rec loop i =
+    if i = 0 then () else loop (i - 1)
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C13" results
+
+        testCase "FSA-C14: Agent Mutability Evasion (Dictionary/Ref)" <| fun _ ->
+            let sourceCode = """
+module BadCode
+open System.Collections.Generic
+let doSomething () =
+    let state = Dictionary<string, int>()
+    state.Add("evasion", 1)
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C14" results
     ]
 
 [<EntryPoint>]
