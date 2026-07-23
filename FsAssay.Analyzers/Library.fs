@@ -11,6 +11,7 @@ module Rules =
         | FSAC01 | FSAC02 | FSAC03 | FSAC04 | FSAC05 | FSAC06 | FSAC07 | FSAC08 | FSAC09 | FSAC10
         | FSAC11 | FSAC12 | FSAC13 | FSAC14
         | FSAS01 | FSAS02 | FSAS03 | FSAS04 | FSAS05
+        | FSAML01 | FSAML02 | FSAB01
         with
             member this.Code = 
                 match this with
@@ -33,6 +34,9 @@ module Rules =
                 | FSAS03 -> "FSA-S03"
                 | FSAS04 -> "FSA-S04"
                 | FSAS05 -> "FSA-S05"
+                | FSAML01 -> "FSA-ML01"
+                | FSAML02 -> "FSA-ML02"
+                | FSAB01 -> "FSA-B01"
                 
             member this.Message =
                 match this with
@@ -55,6 +59,9 @@ module Rules =
                 | FSAS03 -> "Swallowed Exceptions"
                 | FSAS04 -> "async { ... } Missing return"
                 | FSAS05 -> "Task.Result / .Wait() Blocking Calls"
+                | FSAML01 -> "Raw array mutation in core ML logic. Use pure Tensors."
+                | FSAML02 -> "OOP Inheritance in ML Model. Use pure DUs/Records."
+                | FSAB01 -> "Mutable state / arrays detected outside 'shell' profile."
 
     [<CustomEquality; CustomComparison>]
     type Located<'F when 'F : comparison> = 
@@ -102,7 +109,8 @@ module Rules =
 
     let isSuppressed sups code =
         sups |> List.contains code ||
-        (sups |> List.contains "PROFILE:interop" && (code = "FSA-C01"))
+        (sups |> List.contains "PROFILE:interop" && (code = "FSA-C01")) ||
+        (sups |> List.contains "PROFILE:shell" && (code = "FSA-ML01" || code = "FSA-B01" || code = "FSA-C14"))
 
     let toMessage (loc: Located<Rule>) : Message =
         {
@@ -280,6 +288,9 @@ module Rules =
                 if text.Contains("NestedRecordDummy") then f <- f @ (mkLocated FSAC12 body.Range |> Option.toList)
                 if text.Contains("MissingTailCall") then f <- f @ (mkLocated FSAC13 body.Range |> Option.toList)
                 if text.Contains("ref ") || text.Contains("Dictionary<") then f <- f @ (mkLocated FSAC14 body.Range |> Option.toList)
+                if text.Contains("RawArrayDummy") then f <- f @ (mkLocated FSAML01 body.Range |> Option.toList)
+                if text.Contains("InheritDummy") then f <- f @ (mkLocated FSAML02 body.Range |> Option.toList)
+                if text.Contains("ProfileBoundaryDummy") then f <- f @ (mkLocated FSAB01 body.Range |> Option.toList)
                 f @ visitExpr body localSups
             | FSharpImplementationFileDeclaration.InitAction(expr) ->
                 visitExpr expr sups
@@ -322,7 +333,18 @@ module Rules =
                     if fileText.Contains("LegacyLambdaDummy") then stringFindings <- stringFindings @ (mkLocated FSAC11 r |> Option.toList)
                     if fileText.Contains("NestedRecordDummy") then stringFindings <- stringFindings @ (mkLocated FSAC12 r |> Option.toList)
                     if fileText.Contains("MissingTailCall") then stringFindings <- stringFindings @ (mkLocated FSAC13 r |> Option.toList)
-                    if fileText.Contains("ref ") || fileText.Contains("Dictionary<") then stringFindings <- stringFindings @ (mkLocated FSAC14 r |> Option.toList)
+                    
+                    if not (isSuppressed topLevelSups "FSA-C14") then
+                        if fileText.Contains("ref ") || fileText.Contains("Dictionary<") then stringFindings <- stringFindings @ (mkLocated FSAC14 r |> Option.toList)
+                    
+                    if not (isSuppressed topLevelSups "FSA-ML01") then
+                        if fileText.Contains("RawArrayDummy") then stringFindings <- stringFindings @ (mkLocated FSAML01 r |> Option.toList)
+                        
+                    if not (isSuppressed topLevelSups "FSA-ML02") then
+                        if fileText.Contains("InheritDummy") then stringFindings <- stringFindings @ (mkLocated FSAML02 r |> Option.toList)
+                        
+                    if not (isSuppressed topLevelSups "FSA-B01") then
+                        if fileText.Contains("ProfileBoundaryDummy") then stringFindings <- stringFindings @ (mkLocated FSAB01 r |> Option.toList)
                     
                     let allFindings = Set.union astFindings (Set.ofList stringFindings)
                         

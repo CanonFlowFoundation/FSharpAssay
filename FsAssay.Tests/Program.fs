@@ -209,6 +209,33 @@ let doSomething () =
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA-C14" results
+
+        testCase "FSA-ML01: Raw array mutation in core ML logic" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// RawArrayDummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-ML01" results
+
+        testCase "FSA-ML02: OOP Inheritance in ML Model" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// InheritDummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-ML02" results
+
+        testCase "FSA-B01: Mutable state / arrays detected outside 'shell' profile" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// ProfileBoundaryDummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-B01" results
     ]
 
 [<EntryPoint>]
