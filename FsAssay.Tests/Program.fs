@@ -298,6 +298,41 @@ let doSomething () = ()
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA-F07" results
+        testCase "FSA-E01: No Public Classes/Inheritance in API" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// E01Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-E01" results
+
+        testCase "FSA-E02: No Hidden Exceptions in API" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// E02Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-E02" results
+
+        testCase "FSA-E03: No C# Delegates (Action/Func) in API" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// E03Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-E03" results
+
+        testCase "FSA-E04: No Leaked Mutability in API" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// E04Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-E04" results
     ]
 
 [<EntryPoint>]

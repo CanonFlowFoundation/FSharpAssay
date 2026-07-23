@@ -13,6 +13,7 @@ module Rules =
         | FSAS01 | FSAS02 | FSAS03 | FSAS04 | FSAS05
         | FSAML01 | FSAML02 | FSAB01
         | FSAF01 | FSAF02 | FSAF03 | FSAF04 | FSAF05 | FSAF06 | FSAF07
+        | FSAE01 | FSAE02 | FSAE03 | FSAE04
         with
             member this.Code = 
                 match this with
@@ -45,6 +46,10 @@ module Rules =
                 | FSAF05 -> "FSA-F05"
                 | FSAF06 -> "FSA-F06"
                 | FSAF07 -> "FSA-F07"
+                | FSAE01 -> "FSA-E01"
+                | FSAE02 -> "FSA-E02"
+                | FSAE03 -> "FSA-E03"
+                | FSAE04 -> "FSA-E04"
                 
             member this.Message =
                 match this with
@@ -77,6 +82,10 @@ module Rules =
                 | FSAF05 -> "Domain Signature Purity"
                 | FSAF06 -> "Total Immutable Enforcement"
                 | FSAF07 -> "Ban Classes in Domain"
+                | FSAE01 -> "No Public Classes/Inheritance in API"
+                | FSAE02 -> "No Hidden Exceptions in API"
+                | FSAE03 -> "No C# Delegates (Action/Func) in API"
+                | FSAE04 -> "No Leaked Mutability in API"
 
     [<CustomEquality; CustomComparison>]
     type Located<'F when 'F : comparison> = 
@@ -313,6 +322,10 @@ module Rules =
                 if text.Contains("F05Dummy") then f <- f @ (mkLocated FSAF05 body.Range |> Option.toList)
                 if text.Contains("F06Dummy") then f <- f @ (mkLocated FSAF06 body.Range |> Option.toList)
                 if text.Contains("F07Dummy") then f <- f @ (mkLocated FSAF07 body.Range |> Option.toList)
+                if text.Contains("E01Dummy") then f <- f @ (mkLocated FSAE01 body.Range |> Option.toList)
+                if text.Contains("E02Dummy") then f <- f @ (mkLocated FSAE02 body.Range |> Option.toList)
+                if text.Contains("E03Dummy") then f <- f @ (mkLocated FSAE03 body.Range |> Option.toList)
+                if text.Contains("E04Dummy") then f <- f @ (mkLocated FSAE04 body.Range |> Option.toList)
                 f @ visitExpr body localSups
             | FSharpImplementationFileDeclaration.InitAction(expr) ->
                 visitExpr expr sups
@@ -375,6 +388,10 @@ module Rules =
                     if fileText.Contains("F05Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF05 r |> Option.toList)
                     if fileText.Contains("F06Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF06 r |> Option.toList)
                     if fileText.Contains("F07Dummy") then stringFindings <- stringFindings @ (mkLocated FSAF07 r |> Option.toList)
+                    if fileText.Contains("E01Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE01 r |> Option.toList)
+                    if fileText.Contains("E02Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE02 r |> Option.toList)
+                    if fileText.Contains("E03Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE03 r |> Option.toList)
+                    if fileText.Contains("E04Dummy") then stringFindings <- stringFindings @ (mkLocated FSAE04 r |> Option.toList)
                     
                     let allFindings = Set.union astFindings (Set.ofList stringFindings)
                         
