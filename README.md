@@ -183,23 +183,63 @@ FsAssay addresses the shortage of public F# training data in two ways:
 
 ---
 
-### 🟢 Core Functional Anti-Patterns (`FSA1001` – `FSA1401`)
+### 🟣 Tier 3: Pure Functional Physics (`FSA-F01` – `FSA-F07`)
 
-| Rule Code | Name | Description | Elite F# Alternative |
+| Rule ID | Rule Name | Description | Elite F# Alternative |
 | :--- | :--- | :--- | :--- |
-| **`FSA1001`** | **Mutation Overuse** | Unnecessary `mutable` variables or assignment (`<-`). | Use immutable record copy syntax (`{ r with Field = v }`). |
-| **`FSA1002`** | **Partial Access** | Calling `.Value`, `Option.get`, or `.Head`. | Use pattern matching or `Option.map`. |
-| **`FSA1003`** | **Null Reference** | Returning or assigning raw `null`. | Return `Option<'T>`. |
-| **`FSA1004`** | **Primitive Obsession** | Using primitive type aliases (`type Email = string`). | Use Single-Case Discriminated Unions (`type Email = Email of string`). |
-| **`FSA1005`** | **Boolean Validation** | Returning `bool` from validation functions. | Return `Result<ParsedType, Error>` (Parse, Don't Validate). |
-| **`FSA1006`** | **Generic Catch** | Catching `System.Exception` generically. | Use `Result` returning functions. |
-| **`FSA1007`** | **Imperative Loops** | Using `while` loops for iteration/aggregation. | Use `Seq.fold`, `Seq.map`, or recursion. |
-| **`FSA1008`** | **OOP Inheritance** | Using `inherit`, `abstract`, or `interface ... with`. | Compose functions or use Discriminated Unions. |
-| **`FSA1009`** | **Mutable Collections** | Using `ResizeArray` or `List<'T>`. | Use F# immutable `list`, `array`, `Set`, or `Map`. |
-| **`FSA1101`** | **Async Blocking** | Synchronous blocking via `Async.RunSynchronously`. | Use `let!` inside async computation expressions. |
-| **`FSA1201`** | **Unbounded Materialization** | Materializing infinite sequences (`Seq.toList`). | Truncate sequences before materialization. |
-| **`FSA1301`** | **EF Core Domain Leak** | EF Core / ORM dependencies in domain models. | Isolate persistence logic to the infrastructure shell. |
-| **`FSA1401`** | **Unbounded Async Start** | Launching `Async.Start` without `CancellationToken`. | Pass `CancellationToken` or use `Async.StartImmediate`. |
+| **`FSA-F01`** | **No Throwing in Core** | Pure domain logic throwing exceptions. | Return `Result<'T, 'Error>`. |
+| **`FSA-F02`** | **Total Pattern Matching** | Wildcard `_` matches masking missing DU cases. | Make cases explicitly exhaustive. |
+| **`FSA-F03`** | **Result Binding Enforcement** | Imperative `if result.IsOk` checks. | Use `Result.bind` or `Result.map`. |
+| **`FSA-F04`** | **No Implicit Unit Sequences** | Implicitly discarding side-effects (e.g. `printfn` returning `unit`). | Make bindings explicit or extract to shell. |
+| **`FSA-F05`** | **Domain Signature Purity** | Exposed APIs returning `void` / `unit`. | Ensure inputs map to typed outputs. |
+| **`FSA-F06`** | **Total Immutable Enforcement** | Modifying arrays or using `mutable` properties in core domain. | Use immutable copies. |
+| **`FSA-F07`** | **Ban Classes in Domain** | OOP classes defined in domain logic. | Use Discriminated Unions and Records. |
+
+---
+
+### 🔵 Tier 4: Ecosystem & API Gatekeeper (`FSA-E01` – `FSA-E04`)
+
+| Rule ID | Rule Name | Description | Elite F# Alternative |
+| :--- | :--- | :--- | :--- |
+| **`FSA-E01`** | **No Public Classes in API** | Exposing OOP classes/inheritance to consumers. | Expose pure F# functions and Records. |
+| **`FSA-E02`** | **No Hidden Exceptions** | Throwing undocumented exceptions from APIs. | Expose `Result` types for errors. |
+| **`FSA-E03`** | **No C# Delegates** | Forcing consumers to use `System.Action` / `System.Func`. | Use native F# arrow types (`'a -> 'b`). |
+| **`FSA-E04`** | **No Leaked Mutability** | Exposing `Dictionary` or `ref` cells via properties. | Expose `Map` or read-only snapshots. |
+
+---
+
+### 🤖 Tier 5: Machine Learning & Boundary (`FSA-ML01`, `FSA-B01`)
+
+| Rule ID | Rule Name | Description | Elite F# Alternative |
+| :--- | :--- | :--- | :--- |
+| **`FSA-ML01`** | **Raw Array Mutation in ML** | Mutating raw `float[]` in ML logic. | Use immutable pure Tensors. |
+| **`FSA-ML02`** | **OOP Inheritance in ML** | Inheritance in model definitions. | Use composed DUs and Records. |
+| **`FSA-B01`** | **Profile Boundary Violation** | Mutability outside of the `shell` profile. | Restrict side-effects to shell. |
+
+---
+
+## 🦈 The Ecosystem Scanner (`FSA-ECO`)
+
+FsAssay doesn't just lint local projects; it includes a weaponized CLI designed to hunt pure/impure F# repositories on GitHub.
+
+```bash
+# Scan any GitHub repository to grade its F# purity
+dotnet run --project FsAssay.Scanner/FsAssay.Scanner.fsproj https://github.com/demystifyfp/FsToolkit.ErrorHandling
+```
+
+**Verdicts:**
+- 🚨 **Shark**: Fails purity tests (heavy C# interop, `null`, unguarded access).
+- 🐬 **Dolphin**: Passes Elite F# Checks (pure functions, total patterns).
+
+---
+
+## ✨ Roslyn Parity: Code Fixes & IDE Integration
+
+FsAssay integrates natively into **Visual Studio Code (Ionide)** and **JetBrains Rider**.
+Just like Roslyn `CodeFixProvider`s, FsAssay provides automatic IDE remediations for core violations:
+- `isNull x` ➡️ `Option.isNone x`
+- `Async.RunSynchronously` ➡️ `Async.AwaitTask`
+- `use _ = Async.Start` ➡️ `use _ = Async.StartChild`
 
 ---
 

@@ -380,6 +380,7 @@ module Rules =
                     if fileText.Contains("../") then stringFindings <- stringFindings @ (mkLocated FSAS02 r |> Option.toList)
                     if fileText.Contains("try") && fileText.Contains("with _ -> ()") then stringFindings <- stringFindings @ (mkLocated FSAS03 r |> Option.toList)
                     if fileText.Contains("MissingReturn") then stringFindings <- stringFindings @ (mkLocated FSAS04 r |> Option.toList)
+                    if fileText.Contains("isNull") then stringFindings <- stringFindings @ (mkLocated FSAC09 r |> Option.toList)
                     if fileText.Contains(".Wait()") then stringFindings <- stringFindings @ (mkLocated FSAS05 r |> Option.toList)
                     if fileText.Contains("LegacyLambdaDummy") then stringFindings <- stringFindings @ (mkLocated FSAC11 r |> Option.toList)
                     if fileText.Contains("NestedRecordDummy") then stringFindings <- stringFindings @ (mkLocated FSAC12 r |> Option.toList)

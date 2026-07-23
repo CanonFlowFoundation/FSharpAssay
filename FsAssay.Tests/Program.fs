@@ -334,6 +334,16 @@ let doSomething () = ()
 """
             let results = runFsAssay sourceCode
             expectViolation "FSA-E04" results
+
+        testCase "Roslyn Parity: Code Fixes" <| fun _ ->
+            let sourceCode = """
+module BadCode
+let doSomething (x: obj) =
+    if isNull x then ()
+"""
+            let results = runFsAssay sourceCode
+            let fixes = results |> List.collect (fun m -> m.Fixes)
+            Expect.isTrue (fixes |> List.exists (fun f -> f.FromText = "isNull" && f.ToText = "Option.isNone")) "Expected isNull fix"
     ]
 
 [<EntryPoint>]
