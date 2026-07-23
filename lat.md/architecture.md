@@ -50,6 +50,11 @@ Categories of rules enforced by FsAssay.
 
 Tier 1 blocks `Unchecked.defaultof`, partial access, and unguarded exceptions. Tier 2 blocks hard-coded secrets and swallowed exceptions. Core Functional Smells block primitive obsession, `mutable`, and imperative loops.
 
+### Machine Learning & Profile Boundaries
+Strict architectural boundaries mapped directly to ML functionality.
+
+`FSA-ML01` and `FSA-ML02` force ML code to use pure Tensors and DUs instead of raw arrays and OOP inheritance. `FSA-B01` strictly confines mutability (like `Dictionary` or `System.Array`) to the `[<Profile("shell")>]` boundary, preventing effect leakage into the pure functional core.
+
 ## Agent Workflow
 Guidelines for agents contributing to FsAssay or target F# codebases.
 
