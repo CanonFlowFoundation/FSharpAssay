@@ -12,6 +12,7 @@ type Arguments =
     | [<AltCommandLine("-t")>] Out_Toolchain of path:string
     | [<AltCommandLine("-r")>] RateCard_Md of path:string
     | [<AltCommandLine("-m")>] Material_Html of path:string
+    | [<AltCommandLine("-x")>] SuppressionReport_Json of path:string
     | [<AltCommandLine("-w")>] Watch
     | [<AltCommandLine("-d")>] Diff of gitRef:string
     | [<AltCommandLine("-p")>] Serve of port:int
@@ -28,6 +29,7 @@ type Arguments =
                 | Out_Toolchain _ -> "Output file path for toolchain record."
                 | RateCard_Md _ -> "Output file path for Markdown Code Quality Rate Card."
                 | Material_Html _ -> "Output file path for Material Design 5 HTML Dashboard."
+                | SuppressionReport_Json _ -> "Output file path for explicit suppression report."
                 | Watch -> "Watch directory for file changes and re-run scans continuously."
                 | Diff _ -> "Compare quality findings against a Git reference branch."
                 | Serve _ -> "Start live Material Design 5 HTML dashboard web server on specified port."
@@ -54,9 +56,25 @@ let main argv =
     printfn "🧪 FsAssay Engine v0.1.0 — Scanning target: %s [Profile: %s]" path config.profile
     
     let executeScan () =
-        let optionsList = ProjectSystem.getTargetProjects path
+        let optionsList =
+            try
+                ProjectSystem.getTargetProjects path
+            with e ->
+                printfn "💥 Project System Failure: %s" e.Message
+                Environment.Exit(ExitCodes.ToolFailure)
+                failwith "unreachable"
+                
+        let hasProjFiles = 
+            path.EndsWith(".sln") || path.EndsWith(".slnx") || path.EndsWith(".fsproj") ||
+            (Directory.Exists(path) && Directory.GetFiles(path, "*.fsproj", SearchOption.AllDirectories).Length > 0)
+
         let allDiscoveredFiles =
             if List.isEmpty optionsList then
+                if hasProjFiles then
+                    printfn "💥 Project System Failure: F# project files were found but failed to load or contained no source files."
+                    Environment.Exit(ExitCodes.ToolFailure)
+                    failwith "unreachable"
+
                 if File.Exists(path) && path.EndsWith(".fs") then [ (path, None) ]
                 elif Directory.Exists(path) then
                     Directory.GetFiles(path, "*.fs", SearchOption.AllDirectories)
@@ -65,8 +83,12 @@ let main argv =
                     |> Array.toList
                 else []
             else
-                optionsList
-                |> List.collect (fun opts -> opts.SourceFiles |> Array.map (fun f -> (f, Some opts)) |> Array.toList)
+                let files = optionsList |> List.collect (fun opts -> opts.SourceFiles |> Array.map (fun f -> (f, Some opts)) |> Array.toList)
+                if List.isEmpty files && hasProjFiles then
+                    printfn "💥 Project System Failure: F# project files were found but contained no source files."
+                    Environment.Exit(ExitCodes.ToolFailure)
+                    failwith "unreachable"
+                files
 
         let filesToScan =
             match results.TryGetResult(Files) with
@@ -149,6 +171,13 @@ let main argv =
     | Some outPath ->
         Output.writeMaterialDashboard allResults outPath
         printfn "Wrote Material Design 5 HTML Dashboard to %s" outPath
+    | None -> ()
+
+    match results.TryGetResult(SuppressionReport_Json) with
+    | Some outPath ->
+        let files = allResults |> List.map fst
+        Output.writeSuppressionReport files outPath
+        printfn "Wrote Suppression Report to %s" outPath
     | None -> ()
 
     match results.TryGetResult(Serve) with

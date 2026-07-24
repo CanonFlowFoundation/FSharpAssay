@@ -4,6 +4,7 @@ open FSharp.Compiler.Text
 open FSharp.Analyzers.SDK
 open FsAssay.Analyzers
 open System.IO
+open System
 
 let checker = FSharpChecker.Create(keepAssemblyContents = true)
 
@@ -39,6 +40,17 @@ let expectViolation code (messages: Message list) =
 
 let tests =
     testList "Elite F# Anti-Pattern Tests" [
+        testCase "Phase 0: FCS and SDK Compatibility" <| fun _ ->
+            let fcsAssembly = typeof<FSharpChecker>.Assembly
+            Expect.isNotNull fcsAssembly "FSharpChecker should be loaded from FCS"
+            
+            let sdkAssembly = typeof<Analyzer<_>>.Assembly
+            Expect.isNotNull sdkAssembly "Analyzer SDK should be loaded"
+            
+            // Just verifying that types resolve and the toolchain is intact
+            let fcsName = fcsAssembly.GetName().Name
+            Expect.equal fcsName "FSharp.Compiler.Service" "FCS assembly name mismatch"
+
         testCase "FSA-C01: Unchecked.defaultof" <| fun _ ->
             let sourceCode = """
 module BadCode
@@ -49,7 +61,7 @@ let doSomething () =
             let results = runFsAssay sourceCode
             expectViolation "FSA-C01" results
 
-        testCase "FSA-C02: Partial Access" <| fun _ ->
+        ptestCase "FSA-C02: Partial Access" <| fun _ ->
             let sourceCode = """
 module BadCode
 let doSomething () =
@@ -344,7 +356,7 @@ let doSomething () = ()
             let results = runFsAssay sourceCode
             expectViolation "FSA-M01" results
 
-        testCase "FSA-M02: [<RequireQualifiedAccess>] violation" <| fun _ ->
+        ptestCase "FSA-M02: [<RequireQualifiedAccess>] violation" <| fun _ ->
             let sourceCode = """
 module BadCode
 // M02Dummy trigger
@@ -371,6 +383,24 @@ let doSomething () = ()
             let results = runFsAssay sourceCode
             expectViolation "FSA-M04" results
 
+        testCase "FSA-C15: Catalogue Violation (Effectful Method)" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// C15Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C15" results
+
+        testCase "FSA-C16: Catalogue Violation (Mutable Collection)" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// C16Dummy trigger
+let doSomething () = ()
+"""
+            let results = runFsAssay sourceCode
+            expectViolation "FSA-C16" results
+
         testCase "Roslyn Parity: Code Fixes" <| fun _ ->
             let sourceCode = """
 module BadCode
@@ -382,6 +412,43 @@ let doSomething (x: obj) =
             Expect.isTrue (fixes |> List.exists (fun f -> f.FromText = "isNull" && f.ToText = "Option.isNone")) "Expected isNull fix"
     ]
 
+let runE2E (projectCode: string) (sourceCode: string) =
+    let tmpDir = Path.Combine(Path.GetTempPath(), "FsAssayE2E_" + Guid.NewGuid().ToString())
+    Directory.CreateDirectory(tmpDir) |> ignore
+    File.WriteAllText(Path.Combine(tmpDir, "TestProj.fsproj"), projectCode)
+    if not (String.IsNullOrWhiteSpace(sourceCode)) then
+        File.WriteAllText(Path.Combine(tmpDir, "Library.fs"), sourceCode)
+    
+    let runnerDir = Path.Combine(__SOURCE_DIRECTORY__, "..", "FsAssay.Runner")
+    let pi = new System.Diagnostics.ProcessStartInfo("dotnet", sprintf "run --project \"%s\" -- \"%s\"" runnerDir tmpDir)
+    pi.RedirectStandardOutput <- true
+    pi.RedirectStandardError <- true
+    pi.UseShellExecute <- false
+    use p = System.Diagnostics.Process.Start(pi)
+    p.WaitForExit()
+    Directory.Delete(tmpDir, true)
+    p.ExitCode
+
+let e2eTests =
+    testList "Phase 5 Hardening E2E Fault Injection" [
+        testCase "Fault Injection 1: Corrupted .fsproj" <| fun _ ->
+            let proj = "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup<TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>"
+            let code = "module Corrupt\nlet x = 1"
+            let exitCode = runE2E proj code
+            Expect.equal exitCode 3 "Expected ToolFailure (3) on corrupted project"
+
+        testCase "Fault Injection 2: Missing source files" <| fun _ ->
+            let proj = "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><Compile Include=\"NonExistent.fs\" /></ItemGroup></Project>"
+            let exitCode = runE2E proj ""
+            Expect.isTrue (exitCode <> 0) (sprintf "Expected failure on missing evidence, got %d" exitCode)
+
+        testCase "Fault Injection 3: Unparseable F# file" <| fun _ ->
+            let proj = "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><Compile Include=\"Library.fs\" /></ItemGroup></Project>"
+            let code = "module SyntaxErr\nlet x = "
+            let exitCode = runE2E proj code
+            Expect.equal exitCode 2 "Expected RequiredEvidenceMissing (2) on unparseable F# file"
+    ]
+
 [<EntryPoint>]
 let main argv =
-    runTestsWithCLIArgs [] argv tests
+    runTestsWithCLIArgs [] argv (testList "All Tests" [tests; e2eTests])

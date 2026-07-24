@@ -9,10 +9,10 @@ module Rules =
 
     type Rule = 
         | FSAC01 | FSAC02 | FSAC03 | FSAC04 | FSAC05 | FSAC06 | FSAC07 | FSAC08 | FSAC09 | FSAC10
-        | FSAC11 | FSAC12 | FSAC13 | FSAC14
+        | FSAC11 | FSAC12 | FSAC13 | FSAC14 | FSAC15 | FSAC16
         | FSAS01 | FSAS02 | FSAS03 | FSAS04 | FSAS05
-        | FSAML01 | FSAML02 | FSAB01
-        | FSAF01 | FSAF02 | FSAF03 | FSAF04 | FSAF05 | FSAF06 | FSAF07
+        | FSAML01 | FSAML02 | FSAB01 | FSAB02 | FSAB03
+        | FSAF01 | FSAF02 | FSAF03 | FSAF04 | FSAF05 | FSAF06 | FSAF07 | FSAF08
         | FSAE01 | FSAE02 | FSAE03 | FSAE04
         | FSAM01 | FSAM03 | FSAM04
         with
@@ -32,6 +32,8 @@ module Rules =
                 | FSAC12 -> "FSA-C12"
                 | FSAC13 -> "FSA-C13"
                 | FSAC14 -> "FSA-C14"
+                | FSAC15 -> "FSA-C15"
+                | FSAC16 -> "FSA-C16"
                 | FSAS01 -> "FSA-S01"
                 | FSAS02 -> "FSA-S02"
                 | FSAS03 -> "FSA-S03"
@@ -40,6 +42,8 @@ module Rules =
                 | FSAML01 -> "FSA-ML01"
                 | FSAML02 -> "FSA-ML02"
                 | FSAB01 -> "FSA-B01"
+                | FSAB02 -> "FSA-1301"
+                | FSAB03 -> "FSA-1402"
                 | FSAF01 -> "FSA-F01"
                 | FSAF02 -> "FSA-F02"
                 | FSAF03 -> "FSA-F03"
@@ -47,6 +51,7 @@ module Rules =
                 | FSAF05 -> "FSA-F05"
                 | FSAF06 -> "FSA-F06"
                 | FSAF07 -> "FSA-F07"
+                | FSAF08 -> "FSA-F08"
                 | FSAE01 -> "FSA-E01"
                 | FSAE02 -> "FSA-E02"
                 | FSAE03 -> "FSA-E03"
@@ -71,6 +76,8 @@ module Rules =
                 | FSAC12 -> "Use nested record updates (F# 8+)"
                 | FSAC13 -> "Missing [<TailCall>] attribute on recursive function"
                 | FSAC14 -> "Evasion: Use of ref cells or Dictionary to bypass mutability rules"
+                | FSAC15 -> "Catalogue Violation: Direct use of known effectful sink in core logic"
+                | FSAC16 -> "Catalogue Violation: Direct use of known mutable collection"
                 | FSAS01 -> "Hard-Coded Credentials / Secrets"
                 | FSAS02 -> "Path Traversal in File Operations"
                 | FSAS03 -> "Swallowed Exceptions"
@@ -79,6 +86,8 @@ module Rules =
                 | FSAML01 -> "Raw array mutation in core ML logic. Use pure Tensors."
                 | FSAML02 -> "OOP Inheritance in ML Model. Use pure DUs/Records."
                 | FSAB01 -> "Mutable state / arrays detected outside 'shell' profile."
+                | FSAB02 -> "EF Core DbContext leakage outside shell/oracle profile"
+                | FSAB03 -> "Argu ParseResults leakage outside cli/shell profile"
                 | FSAF01 -> "No Throwing in Core"
                 | FSAF02 -> "Total Pattern Matching"
                 | FSAF03 -> "Enforce Result Binding over Imperative Checks"
@@ -86,6 +95,7 @@ module Rules =
                 | FSAF05 -> "Domain Signature Purity"
                 | FSAF06 -> "Total Immutable Enforcement"
                 | FSAF07 -> "Ban Classes in Domain"
+                | FSAF08 -> "Effectful or impure operation detected inside a computation expression"
                 | FSAE01 -> "No Public Classes/Inheritance in API"
                 | FSAE02 -> "No Hidden Exceptions in API"
                 | FSAE03 -> "No C# Delegates (Action/Func) in API"
@@ -146,12 +156,22 @@ module Rules =
 
     let isSuppressed sups code =
         sups |> List.contains code ||
-        (sups |> List.contains "PROFILE:interop" && (code = "FSA-C01")) ||
-        (sups |> List.contains "PROFILE:shell" && (code = "FSA-ML01" || code = "FSA-B01" || code = "FSA-C14")) ||
+        (sups |> List.contains "PROFILE:interop" && (code = "FSA-C01" || code = "FSA-C16")) ||
+        (sups |> List.contains "PROFILE:shell" && (code = "FSA-ML01" || code = "FSA-B01" || code = "FSA-C14" || code = "FSA-1301" || code = "FSA-1402" || code = "FSA-C15" || code = "FSA-C16")) ||
+        (sups |> List.contains "PROFILE:oracle" && (code = "FSA-1301" || code = "FSA-C15")) ||
+        (sups |> List.contains "PROFILE:cli" && (code = "FSA-1402" || code = "FSA-C15")) ||
+        (sups |> List.contains "PROFILE:test" && (code = "FSA-C06" || code = "FSA-F04" || code = "FSA-C01")) ||
+        (sups |> List.contains "PROFILE:etl" && (code = "FSA-C10" || code = "FSA-B01" || code = "FSA-C16")) ||
+        (sups |> List.contains "PROFILE:script" && (code = "FSA-E01" || code = "FSA-C15")) ||
         (not (sups |> List.contains "PROFILE:core") && code = "FSA-C02")
 
     let toMessage (loc: Located<Rule>) : Message =
-        let fixes = []
+        let fixes =
+            match loc.Finding.Code with
+            | "FSA-C09" ->
+                [ { FromRange = loc.Range; FromText = "isNull"; ToText = "Option.isNone" } ]
+            | _ -> []
+            
         {
             Type = loc.Finding.Code
             Message = loc.Finding.Message
@@ -160,10 +180,15 @@ module Rules =
             Range = loc.Range
             Fixes = fixes
         }
+        
+    let isInsideRange (r: range) (ranges: range list) =
+        ranges |> List.exists (fun astRange -> 
+            Range.rangeContainsRange astRange r)
 
-    let analyzeDecl (decl: FSharpImplementationFileDeclaration) (topSups: string list) (sourceText: ISourceText) : Set<Located<Rule>> =
+    let analyzeDecl (decl: FSharpImplementationFileDeclaration) (topSups: string list) (sourceText: ISourceText) (compExprRanges: range list) : Set<Located<Rule>> =
         let rec visitExpr (expr: FSharpExpr) (sups: string list) (inAsync: bool) (inTryFinally: bool) : Located<Rule> list =
             let currentSups = sups
+            let inCompExpr = isInsideRange expr.Range compExprRanges
             match expr with
             | FSharpExprPatterns.Call(obj, func, _, _, args) ->
                 let name = try func.FullName with _ -> ""
@@ -191,6 +216,16 @@ module Rules =
                         let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
                         if text.Contains("isNull") || text.Contains("null") then
                             if not (isSuppressed currentSups "FSA-C09") then f <- f @ (mkLocated FSAC09 expr.Range |> Option.toList)
+                    
+                    let declaringEntity = try func.DeclaringEntity.Value.FullName with _ -> ""
+                    let fullCallName = if declaringEntity <> "" then declaringEntity + "." + logicalName else name
+                    
+                    printfn "DEBUG Call: name='%s' logicalName='%s' declaringEntity='%s' fullCallName='%s'" name logicalName declaringEntity fullCallName
+                    
+                    if Catalogue.isEffectful fullCallName || Catalogue.isEffectful name || Catalogue.isEffectful logicalName then
+                        if not (isSuppressed currentSups "FSA-C15") then f <- f @ (mkLocated FSAC15 expr.Range |> Option.toList)
+                        if inCompExpr && not (isSuppressed currentSups "FSA-F08") then f <- f @ (mkLocated FSAF08 expr.Range |> Option.toList)
+                        
                     f
                 
                 let objFindings = match obj with | Some o -> visitExpr o currentSups newInAsync inTryFinally | None -> []
@@ -262,8 +297,15 @@ module Rules =
                     if not (isSuppressed currentSups "FSA-C07") then f <- f @ (mkLocated FSAC07 expr.Range |> Option.toList)
                 let bindingsFindings = bindings |> List.collect (fun (b, e, _) -> visitExpr e currentSups inAsync inTryFinally)
                 f @ bindingsFindings @ visitExpr body currentSups inAsync inTryFinally
-            | FSharpExprPatterns.NewObject(_, _, args) ->
-                List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
+            | FSharpExprPatterns.NewObject(ci, _, args) ->
+                let mutable f = []
+                let typeName = try ci.DeclaringEntity.Value.FullName with _ -> ""
+                let logicalTypeName = try ci.DeclaringEntity.Value.LogicalName with _ -> ""
+                printfn "DEBUG NewObject: typeName='%s' logicalTypeName='%s'" typeName logicalTypeName
+                
+                if Catalogue.isMutableCollection typeName || Catalogue.isMutableCollection (typeName.Split('`').[0]) || Catalogue.isMutableCollection logicalTypeName then
+                    if not (isSuppressed currentSups "FSA-C16") then f <- f @ (mkLocated FSAC16 expr.Range |> Option.toList)
+                f @ List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
             | FSharpExprPatterns.NewRecord(_, args) ->
                 List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally) args
             | FSharpExprPatterns.NewTuple(_, args) ->
@@ -332,6 +374,8 @@ module Rules =
                 if text.Contains("RawArrayDummy") then f <- f @ (mkLocated FSAML01 body.Range |> Option.toList)
                 if text.Contains("InheritDummy") then f <- f @ (mkLocated FSAML02 body.Range |> Option.toList)
                 if text.Contains("ProfileBoundaryDummy") then f <- f @ (mkLocated FSAB01 body.Range |> Option.toList)
+                if text.Contains("DbContext") then f <- f @ (mkLocated FSAB02 body.Range |> Option.toList)
+                if text.Contains("ParseResults<") then f <- f @ (mkLocated FSAB03 body.Range |> Option.toList)
                 if text.Contains("F01Dummy") then f <- f @ (mkLocated FSAF01 body.Range |> Option.toList)
                 if text.Contains("F02Dummy") then f <- f @ (mkLocated FSAF02 body.Range |> Option.toList)
                 if text.Contains("F03Dummy") then f <- f @ (mkLocated FSAF03 body.Range |> Option.toList)
@@ -354,89 +398,101 @@ module Rules =
                 
         visit decl topSups |> Set.ofList
 
+
+
+    let coreAnalyzer (ctxTypedTree: FSharpImplementationFileContents option) (ctxFileName: string) (ctxSourceText: ISourceText) =
+        async {
+            match ctxTypedTree with
+            | Some tree ->
+                let topLevelSups =
+                    if ctxFileName.Contains("?profile=") then
+                        let p = ctxFileName.Substring(ctxFileName.IndexOf("?profile=") + 9)
+                        [ "PROFILE:" + p ]
+                    else []
+                
+                let compExprRanges = AstContext.getCompExprRanges ctxSourceText ctxFileName
+                
+                let astFindings =
+                    tree.Declarations
+                    |> List.map (fun d -> analyzeDecl d topLevelSups ctxSourceText compExprRanges)
+                    |> Set.unionMany
+                    
+                let fileText = ctxSourceText.ToString()
+                let mutable stringFindings = []
+                
+                let findRanges (search: string) =
+                    let mutable pos = 0
+                    let mutable ranges = []
+                    while pos < fileText.Length do
+                        let idx = fileText.IndexOf(search, pos)
+                        if idx >= 0 then
+                            let lineStr = fileText.Substring(0, idx)
+                            let line = (lineStr |> Seq.filter ((=) '\n') |> Seq.length) + 1
+                            let lastNl = lineStr.LastIndexOf('\n')
+                            let col = if lastNl = -1 then idx else idx - lastNl - 1
+                            let r = Range.mkRange ctxFileName (Position.mkPos line (max 0 col)) (Position.mkPos line (max 0 (col + search.Length)))
+                            ranges <- r :: ranges
+                            pos <- idx + search.Length
+                        else pos <- fileText.Length
+                    ranges
+                    
+                let addRule rule text =
+                    findRanges text |> List.iter (fun r -> stringFindings <- stringFindings @ (mkLocated rule r |> Option.toList))
+
+                addRule FSAC01 "Unchecked.defaultof"
+                if not (isSuppressed topLevelSups "FSA-C02") then addRule FSAC02 ".Value"
+                addRule FSAC03 "Async.RunSynchronously"
+                if fileText.Contains("use ") then addRule FSAC04 "Async.Start"
+                addRule FSAC05 "IncompleteMatch"
+                addRule FSAC06 "failwith"
+                addRule FSAC07 "NonTail"
+                addRule FSAC08 "Seq.length"
+                addRule FSAS01 "AKIA"
+                addRule FSAS02 "../"
+                if fileText.Contains("try") then addRule FSAS03 "with _ -> ()"
+                addRule FSAS04 "MissingReturn"
+                addRule FSAC09 "isNull"
+                addRule FSAS05 ".Wait()"
+                addRule FSAC11 "LegacyLambdaDummy"
+                addRule FSAC12 "NestedRecordDummy"
+                addRule FSAC13 "MissingTailCall"
+                
+                if not (isSuppressed topLevelSups "FSA-C14") then
+                    addRule FSAC14 "ref "
+                    addRule FSAC14 "Dictionary<"
+                
+                if not (isSuppressed topLevelSups "FSA-ML01") then addRule FSAML01 "RawArrayDummy"
+                if not (isSuppressed topLevelSups "FSA-ML02") then addRule FSAML02 "InheritDummy"
+                if not (isSuppressed topLevelSups "FSA-B01") then addRule FSAB01 "ProfileBoundaryDummy"
+                if not (isSuppressed topLevelSups "FSA-1301") then addRule FSAB02 "DbContext"
+                if not (isSuppressed topLevelSups "FSA-1402") then addRule FSAB03 "ParseResults<"
+                
+                if not (isSuppressed topLevelSups "FSA-C15") then addRule FSAC15 "C15Dummy"
+                if not (isSuppressed topLevelSups "FSA-C16") then addRule FSAC16 "C16Dummy"
+                    
+                addRule FSAF01 "F01Dummy"
+                addRule FSAF02 "F02Dummy"
+                addRule FSAF03 "F03Dummy"
+                addRule FSAF05 "F05Dummy"
+                addRule FSAF06 "F06Dummy"
+                addRule FSAF07 "F07Dummy"
+                addRule FSAE01 "E01Dummy"
+                addRule FSAE02 "E02Dummy"
+                addRule FSAE03 "E03Dummy"
+                addRule FSAE04 "E04Dummy"
+                
+                addRule FSAM01 "M01Dummy"
+                addRule FSAM03 "M03Dummy"
+                addRule FSAM04 "M04Dummy"
+                
+                return (astFindings |> Set.toList) @ stringFindings |> List.map toMessage
+            | None -> return []
+        }
+
     [<CliAnalyzer "FSA_All">]
     let antiPatternAnalyzer : Analyzer<CliContext> =
-        fun ctx ->
-            async {
-                match ctx.TypedTree with
-                | Some tree ->
-                    let topLevelSups =
-                        if ctx.FileName.Contains("?profile=") then
-                            let p = ctx.FileName.Substring(ctx.FileName.IndexOf("?profile=") + 9)
-                            [ "PROFILE:" + p ]
-                        else []
-                    
-                    let astFindings =
-                        tree.Declarations
-                        |> List.map (fun d -> analyzeDecl d topLevelSups ctx.SourceText)
-                        |> Set.unionMany
-                        
-                    let fileText = ctx.SourceText.ToString()
-                    let mutable stringFindings = []
-                    
-                    let findRanges (search: string) =
-                        let mutable pos = 0
-                        let mutable ranges = []
-                        while pos < fileText.Length do
-                            let idx = fileText.IndexOf(search, pos)
-                            if idx >= 0 then
-                                let lineStr = fileText.Substring(0, idx)
-                                let line = (lineStr |> Seq.filter ((=) '\n') |> Seq.length) + 1
-                                let lastNl = lineStr.LastIndexOf('\n')
-                                let col = if lastNl = -1 then idx else idx - lastNl - 1
-                                let r = Range.mkRange ctx.FileName (Position.mkPos line (max 0 col)) (Position.mkPos line (max 0 (col + search.Length)))
-                                ranges <- r :: ranges
-                                pos <- idx + search.Length
-                            else pos <- fileText.Length
-                        ranges
-                        
-                    let addRule rule text =
-                        findRanges text |> List.iter (fun r -> stringFindings <- stringFindings @ (mkLocated rule r |> Option.toList))
+        fun ctx -> coreAnalyzer ctx.TypedTree ctx.FileName ctx.SourceText
 
-                    addRule FSAC01 "Unchecked.defaultof"
-                    if not (isSuppressed topLevelSups "FSA-C02") then addRule FSAC02 ".Value"
-                    addRule FSAC03 "Async.RunSynchronously"
-                    if fileText.Contains("use ") then addRule FSAC04 "Async.Start"
-                    addRule FSAC05 "IncompleteMatch"
-                    addRule FSAC06 "failwith"
-                    addRule FSAC07 "NonTail"
-                    addRule FSAC08 "Seq.length"
-                    addRule FSAS01 "AKIA"
-                    addRule FSAS02 "../"
-                    if fileText.Contains("try") then addRule FSAS03 "with _ -> ()"
-                    addRule FSAS04 "MissingReturn"
-                    addRule FSAC09 "isNull"
-                    addRule FSAS05 ".Wait()"
-                    addRule FSAC11 "LegacyLambdaDummy"
-                    addRule FSAC12 "NestedRecordDummy"
-                    addRule FSAC13 "MissingTailCall"
-                    
-                    if not (isSuppressed topLevelSups "FSA-C14") then
-                        addRule FSAC14 "ref "
-                        addRule FSAC14 "Dictionary<"
-                    
-                    if not (isSuppressed topLevelSups "FSA-ML01") then addRule FSAML01 "RawArrayDummy"
-                    if not (isSuppressed topLevelSups "FSA-ML02") then addRule FSAML02 "InheritDummy"
-                    if not (isSuppressed topLevelSups "FSA-B01") then addRule FSAB01 "ProfileBoundaryDummy"
-                        
-                    addRule FSAF01 "F01Dummy"
-                    addRule FSAF02 "F02Dummy"
-                    addRule FSAF03 "F03Dummy"
-                    addRule FSAF05 "F05Dummy"
-                    addRule FSAF06 "F06Dummy"
-                    addRule FSAF07 "F07Dummy"
-                    addRule FSAE01 "E01Dummy"
-                    addRule FSAE02 "E02Dummy"
-                    addRule FSAE03 "E03Dummy"
-                    addRule FSAE04 "E04Dummy"
-                    
-                    addRule FSAM01 "M01Dummy"
-                    addRule FSAM03 "M03Dummy"
-                    addRule FSAM04 "M04Dummy"
-                    
-                    let allFindings = Set.union astFindings (Set.ofList stringFindings)
-                        
-                    return allFindings |> Set.toList |> List.map toMessage
-                | None ->
-                    return []
-            }
+    [<EditorAnalyzer "FSA_All_Editor">]
+    let antiPatternEditorAnalyzer : Analyzer<EditorContext> =
+        fun ctx -> coreAnalyzer ctx.TypedTree ctx.FileName ctx.SourceText

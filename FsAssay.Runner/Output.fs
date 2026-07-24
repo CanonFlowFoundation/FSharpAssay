@@ -170,4 +170,16 @@ module Output =
 
         File.WriteAllText(outPath, html)
 
-
+    let writeSuppressionReport (files: string list) (outPath: string) =
+        let suppressions =
+            files
+            |> List.collect (fun f ->
+                let lines = File.ReadAllLines(f)
+                lines 
+                |> Array.mapi (fun i l -> (i + 1, l))
+                |> Array.filter (fun (_, l) -> l.Contains("SuppressMessage") || l.Contains("Profile"))
+                |> Array.map (fun (i, l) -> {| file = f; line = i; text = l.Trim() |})
+                |> Array.toList
+            )
+        let options = JsonSerializerOptions(WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
+        File.WriteAllText(outPath, JsonSerializer.Serialize(suppressions, options))

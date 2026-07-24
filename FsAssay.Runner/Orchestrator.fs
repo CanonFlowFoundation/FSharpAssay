@@ -6,6 +6,7 @@ open FSharp.Analyzers.SDK
 open FsAssay.Analyzers
 open FSharp.Compiler.CodeAnalysis
 open FSharp.Compiler.Text
+open FSharp.Compiler.Diagnostics
 
 module Orchestrator =
     
@@ -23,7 +24,11 @@ module Orchestrator =
             | FSharpCheckFileAnswer.Aborted -> 
                 return Failed (AnalyzerException "FSharpCheckFileAnswer.Aborted")
             | FSharpCheckFileAnswer.Succeeded(checkResults) ->
-                if checkResults.HasFullTypeCheckInfo && checkResults.ImplementationFile.IsSome then
+                let hasErrors = 
+                    (parseResults.Diagnostics |> Array.exists (fun d -> d.Severity = FSharpDiagnosticSeverity.Error)) ||
+                    (checkResults.Diagnostics |> Array.exists (fun d -> d.Severity = FSharpDiagnosticSeverity.Error))
+
+                if not hasErrors && checkResults.HasFullTypeCheckInfo && checkResults.ImplementationFile.IsSome then
                     let context : CliContext = {
                         FileName = if profile <> "core" && not (file.Contains("PROFILE:")) then sprintf "%s?profile=%s" file profile else file
                         SourceText = sourceText
@@ -64,21 +69,28 @@ module Orchestrator =
             | FSharpCheckFileAnswer.Aborted ->
                 return Failed (AnalyzerException "FSharpCheckFileAnswer.Aborted")
             | FSharpCheckFileAnswer.Succeeded(checkResults) ->
-                let context : CliContext = {
-                    FileName = if profile <> "core" && not (file.Contains("PROFILE:")) then sprintf "%s?profile=%s" file profile else file
-                    SourceText = sourceText
-                    ParseFileResults = parseResults
-                    CheckFileResults = checkResults
-                    TypedTree = checkResults.ImplementationFile
-                    CheckProjectResults = Unchecked.defaultof<_>
-                    ProjectOptions = AnalyzerProjectOptions.BackgroundCompilerOptions options
-                    AnalyzerIgnoreRanges = Map.empty
-                }
-                try
-                    let! violations = Rules.antiPatternAnalyzer context
-                    return Completed violations
-                with e ->
-                    return Failed (AnalyzerException e.Message)
+                let hasErrors = 
+                    (parseResults.Diagnostics |> Array.exists (fun d -> d.Severity = FSharpDiagnosticSeverity.Error)) ||
+                    (checkResults.Diagnostics |> Array.exists (fun d -> d.Severity = FSharpDiagnosticSeverity.Error))
+
+                if hasErrors then
+                    return Skipped CompilerErrors
+                else
+                    let context : CliContext = {
+                        FileName = if profile <> "core" && not (file.Contains("PROFILE:")) then sprintf "%s?profile=%s" file profile else file
+                        SourceText = sourceText
+                        ParseFileResults = parseResults
+                        CheckFileResults = checkResults
+                        TypedTree = checkResults.ImplementationFile
+                        CheckProjectResults = Unchecked.defaultof<_>
+                        ProjectOptions = AnalyzerProjectOptions.BackgroundCompilerOptions options
+                        AnalyzerIgnoreRanges = Map.empty
+                    }
+                    try
+                        let! violations = Rules.antiPatternAnalyzer context
+                        return Completed violations
+                    with e ->
+                        return Failed (AnalyzerException e.Message)
     }
 
     let evaluateSingleFile file = evaluateSingleFileWithProfile file "core"

@@ -6,6 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Catalogue.fs" />
+    <Compile Include="AstContext.fs" />
     <Compile Include="Library.fs" />
   </ItemGroup>
 
