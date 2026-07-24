@@ -41,7 +41,7 @@ module Orchestrator =
                     }
                     
                     try
-                        let! violations = Rules.antiPatternAnalyzer context
+                        let! violations = Library.antiPatternAnalyzer context
                         return Completed violations
                     with e ->
                         return Failed (AnalyzerException e.Message)
@@ -87,7 +87,7 @@ module Orchestrator =
                         AnalyzerIgnoreRanges = Map.empty
                     }
                     try
-                        let! violations = Rules.antiPatternAnalyzer context
+                        let! violations = Library.antiPatternAnalyzer context
                         return Completed violations
                     with e ->
                         return Failed (AnalyzerException e.Message)

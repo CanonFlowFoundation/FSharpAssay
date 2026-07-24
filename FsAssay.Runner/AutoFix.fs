@@ -4,7 +4,7 @@ open System.IO
 open FSharp.Analyzers.SDK
 
 module AutoFix =
-    let applyAutoFixes (file: string) (violations: Message list) =
+    let applyFixes (file: string) (violations: Message list) =
         if not (File.Exists(file)) || List.isEmpty violations then 0
         else
             let lines = File.ReadAllLines(file)

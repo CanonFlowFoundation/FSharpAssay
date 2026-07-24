@@ -19,6 +19,7 @@ type Arguments =
     | [<AltCommandLine("-a")>] Adjudicate
     | [<AltCommandLine("-c")>] Files of paths:string
     | [<AltCommandLine("-P")>] Profile of profileName:string
+    | [<AltCommandLine("-f")>] Fix
     with
         interface IArgParserTemplate with
             member s.Usage =
@@ -36,6 +37,7 @@ type Arguments =
                 | Adjudicate -> "Run in adjudication mode (evaluate Precision/Recall against // EXPECT comments)."
                 | Files _ -> "Comma-separated list of explicit files to scan (Incremental mode)."
                 | Profile _ -> "Specify active domain profile (core, interop, cli, etl, test, script)."
+                | Fix -> "Automatically apply recommended fixes to source files."
 
 [<EntryPoint>]
 let main argv =
@@ -100,7 +102,7 @@ let main argv =
 
         if List.isEmpty filesToScan then
             printfn "No files found to scan."
-            (0, 0, 0, 0, [])
+            (0, 0, 0, 0, [], [])
         else
             let mutable totalViolations = 0
             let mutable totalFiles = 0
@@ -126,17 +128,65 @@ let main argv =
                                 printfn "\n❌ %s" file
                                 for v in violations do
                                     printfn "   └── [%s] %s (Line: %d, Col: %d)" v.Code v.Message v.Range.StartLine v.Range.StartColumn
+                            
+                            if results.Contains(Fix) then
+                                let fixedCount = AutoFix.applyFixes file violations
+                                if fixedCount > 0 then
+                                    printfn "   ✨ Applied %d auto-fix(es) to %s" fixedCount file
                     | Skipped reason ->
                         skippedFiles <- skippedFiles + 1
                     | Failed fail ->
                         failedFiles <- failedFiles + 1
                         printfn "\n💥 Exception in %s: %A" file fail
 
-            (totalFiles, skippedFiles, failedFiles, totalViolations, List.ofSeq allResults)
+            (totalFiles, skippedFiles, failedFiles, totalViolations, List.ofSeq allResults, filesToScan |> List.map fst)
 
-    let (totalFiles, skippedFiles, failedFiles, totalViolations, allResults) = executeScan ()
+    let (totalFiles, skippedFiles, failedFiles, totalViolations, allResults, scannedFiles) = executeScan ()
 
-    if not (results.Contains(Adjudicate)) then
+    if results.Contains(Adjudicate) then
+        printfn "\n--- Adjudication Mode ---"
+        let mutable truePositives = 0
+        let mutable falsePositives = 0
+        let mutable falseNegatives = 0
+
+        let expectedCodes = System.Collections.Generic.List<string>()
+        let actualCodes = System.Collections.Generic.List<string>()
+
+        for file in scannedFiles do
+            if file.EndsWith(".fs") then
+                let lines = File.ReadAllLines(file)
+                for i = 0 to lines.Length - 1 do
+                    let line = lines.[i]
+                    let m = System.Text.RegularExpressions.Regex.Match(line, @"//\s*EXPECT:\s*(FSA[A-Z0-9]+)")
+                    if m.Success then
+                        expectedCodes.Add(m.Groups.[1].Value)
+
+        for (file, violations) in allResults do
+            for v in violations do
+                actualCodes.Add(v.Code)
+
+        let expectedList = expectedCodes |> List.ofSeq
+        let actualList = actualCodes |> List.ofSeq
+        
+        let expectedCount = expectedList |> List.countBy id |> Map.ofList
+        let actualCount = actualList |> List.countBy id |> Map.ofList
+        
+        let allKeys = Set.union (expectedCount.Keys |> Set.ofSeq) (actualCount.Keys |> Set.ofSeq)
+        
+        for k in allKeys do
+            let e = match expectedCount.TryFind k with Some x -> x | None -> 0
+            let a = match actualCount.TryFind k with Some x -> x | None -> 0
+            truePositives <- truePositives + min e a
+            if a > e then falsePositives <- falsePositives + (a - e)
+            if e > a then falseNegatives <- falseNegatives + (e - a)
+
+        let precision = if truePositives + falsePositives = 0 then 1.0 else float truePositives / float (truePositives + falsePositives)
+        let recall = if truePositives + falseNegatives = 0 then 1.0 else float truePositives / float (truePositives + falseNegatives)
+
+        printfn "Precision: %.2f%%" (precision * 100.0)
+        printfn "Recall:    %.2f%%" (recall * 100.0)
+        printfn "TP: %d | FP: %d | FN: %d" truePositives falsePositives falseNegatives
+    else
         printfn "\n--- Scan complete! ---"
         printfn "Files scanned: %d" totalFiles
         printfn "Skipped: %d" skippedFiles

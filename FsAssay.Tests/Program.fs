@@ -30,7 +30,7 @@ let runFsAssay (source: string) =
             ProjectOptions = Unchecked.defaultof<_>
             AnalyzerIgnoreRanges = Map.empty
         }
-        Rules.antiPatternAnalyzer context |> Async.RunSynchronously
+        Library.antiPatternAnalyzer context |> Async.RunSynchronously
     | FSharpCheckFileAnswer.Aborted -> 
         failwith "Failed to parse and check: Aborted"
 
