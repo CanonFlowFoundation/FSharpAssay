@@ -22,7 +22,7 @@ type Rule =
     | FSAF01 | FSAF02 | FSAF03 | FSAF04 | FSAF05 | FSAF06 | FSAF07 | FSAF08
     | FSAE01 | FSAE02 | FSAE03 | FSAE04
     | FSAM01 | FSAM03 | FSAM04
-    | FSAAI10 | FSAAI07
+    | FSAAI10 | FSAAI07 | FSAAI11
     with
         member this.Code = 
             match this with
@@ -69,6 +69,7 @@ type Rule =
             | FSAM04 -> "FSA-M04"
             | FSAAI10 -> "FSA-AI10"
             | FSAAI07 -> "FSA-AI07"
+            | FSAAI11 -> "FSA-AI11"
             
         member this.Message =
             match this with
@@ -115,6 +116,7 @@ type Rule =
             | FSAM04 -> "Active pattern partiality without fallback"
             | FSAAI10 -> "Magic numbers: numeric literals > 1 in non-test code"
             | FSAAI07 -> "Overly Generic: more than 5 generic parameters in a function/method"
+            | FSAAI11 -> "Missing [<RequireQualifiedAccess>] attribute on Discriminated Union or Enum"
 
 [<CustomEquality; CustomComparison>]
 type Located<'F when 'F : comparison> = 
