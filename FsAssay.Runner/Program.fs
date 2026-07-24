@@ -57,6 +57,15 @@ let main argv =
 
     printfn "🧪 FsAssay Engine v0.1.0 — Scanning target: %s [Profile: %s]" path config.profile
     
+    let typedProfile =
+        match config.profile.ToLowerInvariant() with
+        | "shell" -> FsAssay.Analyzers.Domain.Profile.Shell
+        | "oracle" -> FsAssay.Analyzers.Domain.Profile.Oracle
+        | "api" -> FsAssay.Analyzers.Domain.Profile.Api
+        | "test" -> FsAssay.Analyzers.Domain.Profile.Test
+        | "script" -> FsAssay.Analyzers.Domain.Profile.Script
+        | _ -> FsAssay.Analyzers.Domain.Profile.Core
+
     let executeScan () =
         let optionsList =
             try
@@ -116,8 +125,8 @@ let main argv =
                     totalFiles <- totalFiles + 1
                     let verdict =
                         match optsOpt with
-                        | Some opts -> Orchestrator.evaluateFileWithProfile opts file config.profile |> Async.RunSynchronously
-                        | None -> Orchestrator.evaluateSingleFileWithProfile file config.profile |> Async.RunSynchronously
+                        | Some opts -> Orchestrator.evaluateFileWithProfile opts file typedProfile |> Async.RunSynchronously
+                        | None -> Orchestrator.evaluateSingleFileWithProfile file typedProfile |> Async.RunSynchronously
 
                     match verdict with
                     | Completed violations ->
@@ -129,10 +138,9 @@ let main argv =
                                 for v in violations do
                                     printfn "   └── [%s] %s (Line: %d, Col: %d)" v.Code v.Message v.Range.StartLine v.Range.StartColumn
                             
+                            
                             if results.Contains(Fix) then
-                                let fixedCount = AutoFix.applyFixes file violations
-                                if fixedCount > 0 then
-                                    printfn "   ✨ Applied %d auto-fix(es) to %s" fixedCount file
+                                printfn "   ✨ Auto-fix is disabled in this sprint."
                     | Skipped reason ->
                         skippedFiles <- skippedFiles + 1
                     | Failed fail ->
@@ -149,8 +157,10 @@ let main argv =
         let mutable falsePositives = 0
         let mutable falseNegatives = 0
 
-        let expectedCodes = System.Collections.Generic.List<string>()
-        let actualCodes = System.Collections.Generic.List<string>()
+        // expected: list of (file, ruleCode, lineNumber)
+        let expectedCodes = System.Collections.Generic.List<string * string * int>()
+        // actual: list of (file, ruleCode, startLine)
+        let actualCodes = System.Collections.Generic.List<string * string * int>()
 
         for file in scannedFiles do
             if file.EndsWith(".fs") then
@@ -159,26 +169,34 @@ let main argv =
                     let line = lines.[i]
                     let m = System.Text.RegularExpressions.Regex.Match(line, @"//\s*EXPECT:\s*(FSA[A-Z0-9]+)")
                     if m.Success then
-                        expectedCodes.Add(m.Groups.[1].Value)
+                        let code = m.Groups.[1].Value
+                        expectedCodes.Add((file, code, i + 1)) // 1-indexed
 
         for (file, violations) in allResults do
             for v in violations do
-                actualCodes.Add(v.Code)
+                actualCodes.Add((file, v.Code, v.Range.StartLine))
 
+        if expectedCodes.Count = 0 then
+            printfn "💥 Adjudicate Failed: Zero evidence (no EXPECT comments found)."
+            Environment.Exit(ExitCodes.ToolFailure)
+
+        // Matching logic: an expected code is TP if there is an actual code with same file and ruleCode within 3 lines
         let expectedList = expectedCodes |> List.ofSeq
-        let actualList = actualCodes |> List.ofSeq
-        
-        let expectedCount = expectedList |> List.countBy id |> Map.ofList
-        let actualCount = actualList |> List.countBy id |> Map.ofList
-        
-        let allKeys = Set.union (expectedCount.Keys |> Set.ofSeq) (actualCount.Keys |> Set.ofSeq)
-        
-        for k in allKeys do
-            let e = match expectedCount.TryFind k with Some x -> x | None -> 0
-            let a = match actualCount.TryFind k with Some x -> x | None -> 0
-            truePositives <- truePositives + min e a
-            if a > e then falsePositives <- falsePositives + (a - e)
-            if e > a then falseNegatives <- falseNegatives + (e - a)
+        let mutable actualRemaining = actualCodes |> List.ofSeq
+
+        for (eFile, eCode, eLine) in expectedList do
+            let matchIdx = actualRemaining |> List.tryFindIndex (fun (aFile, aCode, aLine) -> aFile = eFile && aCode = eCode && abs (aLine - eLine) <= 3)
+            match matchIdx with
+            | Some idx ->
+                truePositives <- truePositives + 1
+                actualRemaining <- actualRemaining |> List.removeAt idx
+            | None ->
+                printfn "   False Negative: expected %s in %s near line %d" eCode eFile eLine
+                falseNegatives <- falseNegatives + 1
+
+        for (aFile, aCode, aLine) in actualRemaining do
+            printfn "   False Positive: actual %s in %s at line %d" aCode aFile aLine
+            falsePositives <- falsePositives + 1
 
         let precision = if truePositives + falsePositives = 0 then 1.0 else float truePositives / float (truePositives + falsePositives)
         let recall = if truePositives + falseNegatives = 0 then 1.0 else float truePositives / float (truePositives + falseNegatives)
@@ -186,6 +204,9 @@ let main argv =
         printfn "Precision: %.2f%%" (precision * 100.0)
         printfn "Recall:    %.2f%%" (recall * 100.0)
         printfn "TP: %d | FP: %d | FN: %d" truePositives falsePositives falseNegatives
+        
+        if precision < 1.0 || recall < 1.0 then
+            Environment.Exit(ExitCodes.BlockingFinding)
     else
         printfn "\n--- Scan complete! ---"
         printfn "Files scanned: %d" totalFiles

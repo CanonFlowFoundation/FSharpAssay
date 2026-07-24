@@ -1,4 +1,0 @@
-{
-  "profile": "shell",
-  "exclude": ["**/obj/**", "**/bin/**", "**/AssemblyAttributes.fs", "**/Program.fs"]
-}

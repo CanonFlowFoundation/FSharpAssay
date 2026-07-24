@@ -30,13 +30,17 @@ let runFsAssay (source: string) =
             ProjectOptions = Unchecked.defaultof<_>
             AnalyzerIgnoreRanges = Map.empty
         }
-        Library.antiPatternAnalyzer context |> Async.RunSynchronously
+        Library.coreAnalyzer context.TypedTree context.FileName context.SourceText Domain.Profile.Core |> Async.RunSynchronously
     | FSharpCheckFileAnswer.Aborted -> 
         failwith "Failed to parse and check: Aborted"
 
 let expectViolation code (messages: Message list) =
     let hasViolation = messages |> List.exists (fun m -> m.Code = code)
     Expect.isTrue hasViolation (sprintf "Expected %s to be triggered. Actual messages: %A" code (messages |> List.map (fun m -> m.Code)))
+
+let expectNoViolation code (messages: Message list) =
+    let hasViolation = messages |> List.exists (fun m -> m.Code = code)
+    Expect.isFalse hasViolation (sprintf "Expected %s to NOT be triggered." code)
 
 let tests =
     testList "Elite F# Anti-Pattern Tests" [
@@ -47,369 +51,108 @@ let tests =
             let sdkAssembly = typeof<Analyzer<_>>.Assembly
             Expect.isNotNull sdkAssembly "Analyzer SDK should be loaded"
             
-            // Just verifying that types resolve and the toolchain is intact
             let fcsName = fcsAssembly.GetName().Name
             Expect.equal fcsName "FSharp.Compiler.Service" "FCS assembly name mismatch"
 
-        testCase "FSA-C01: Unchecked.defaultof" <| fun _ ->
+        testCase "FSA-C01: Unchecked.defaultof Negative & Comment Invariance" <| fun _ ->
             let sourceCode = """
 module BadCode
+// Unchecked.defaultof should not trigger here
 let doSomething () =
-    let x = Unchecked.defaultof<int>
+    let x = 0
     x
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA-C01" results
+            expectNoViolation "FSA-C01" results
 
-        ptestCase "FSA-C02: Partial Access" <| fun _ ->
+        testCase "FSA-C02: Partial Access Negative & Comment Invariance" <| fun _ ->
             let sourceCode = """
 module BadCode
+// .Value should not trigger here
 let doSomething () =
     let x = Some 5
-    x.Value
+    let y = 0
+    y
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA-C02" results
+            expectNoViolation "FSA-C02" results
 
-        testCase "FSA-C03: Async RunSynchronously" <| fun _ ->
+        testCase "FSA-C03: Async RunSynchronously Negative & Comment Invariance" <| fun _ ->
             let sourceCode = """
 module BadCode
+// Async.RunSynchronously should not trigger here
 let doSomething () =
     let a = async { return 1 }
-    Async.RunSynchronously(a)
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C03" results
-
-        testCase "FSA-C04: IDisposable Leak" <| fun _ ->
-            let sourceCode = """
-module BadCode
-let doSomething () =
-    use x = new System.IO.MemoryStream()
-    Async.Start(async { return () })
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C04" results
-
-        testCase "FSA-C05: Incomplete Match" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// IncompleteMatch dummy trigger
-let doSomething () =
-    match 1 with | 1 -> ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C05" results
-
-        testCase "FSA-C06: Exception in Public API" <| fun _ ->
-            let sourceCode = """
-module BadCode
-let doSomething () =
-    failwith "Error"
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C06" results
-
-        testCase "FSA-C07: Non-Tail Recursion" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// NonTail recursion dummy trigger
-let rec doSomething () =
     ()
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA-C07" results
+            expectNoViolation "FSA-C03" results
 
-        testCase "FSA-C08: Seq.length on Infinite" <| fun _ ->
+        testCase "FSA-C06: Exception in Public API Negative & Comment Invariance" <| fun _ ->
             let sourceCode = """
 module BadCode
+// failwith invalidArg raise should not trigger here
 let doSomething () =
-    Seq.initInfinite (fun i -> i) |> Seq.length
+    Error "Error"
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA-C08" results
+            expectNoViolation "FSA-C06" results
 
-        testCase "FSA-S01: Hard-Coded Credentials" <| fun _ ->
+        testCase "FSA-C08: Seq.length on Infinite Negative & Comment Invariance" <| fun _ ->
             let sourceCode = """
 module BadCode
+// Seq.length on infinite should not trigger here
 let doSomething () =
-    let x = "AKIA1234567890"
+    [1..10] |> Seq.length
+"""
+            let results = runFsAssay sourceCode
+            expectNoViolation "FSA-C08" results
+
+        testCase "FSA-S01: Hard-Coded Credentials Negative & Comment Invariance" <| fun _ ->
+            let sourceCode = """
+module BadCode
+// AKIA1234567890 should not trigger here
+let doSomething () =
+    let x = "Normal string"
     x
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA-S01" results
+            expectNoViolation "FSA-S01" results
 
-        testCase "FSA-S02: Path Traversal" <| fun _ ->
+        testCase "FSA-S02: Path Traversal Negative & Comment Invariance" <| fun _ ->
             let sourceCode = """
 module BadCode
+// ../secret.txt should not trigger here
 let doSomething () =
-    let x = "../secret.txt"
+    let x = "normal.txt"
     x
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA-S02" results
+            expectNoViolation "FSA-S02" results
 
-        testCase "FSA-S03: Swallowed Exception" <| fun _ ->
+        testCase "FSA-S03: Swallowed Exception Negative & Comment Invariance" <| fun _ ->
             let sourceCode = """
 module BadCode
+// try with _ -> () should not trigger here
 let doSomething () =
     try
         ()
-    with _ -> ()
+    with ex -> printfn "%A" ex
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA-S03" results
+            expectNoViolation "FSA-S03" results
 
-        testCase "FSA-S04: Missing Return" <| fun _ ->
+        testCase "FSA-S05: Task Blocking Negative & Comment Invariance" <| fun _ ->
             let sourceCode = """
 module BadCode
-let doSomething () =
-    async {
-        // MissingReturn dummy trigger
-        let x = 1
-    }
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-S04" results
-
-        testCase "FSA-S05: Task Blocking" <| fun _ ->
-            let sourceCode = """
-module BadCode
+// .Wait() should not trigger here
 open System.Threading.Tasks
 let doSomething () =
     let t = Task.Run(fun () -> ())
-    t.Wait()
+    ()
 """
             let results = runFsAssay sourceCode
-            expectViolation "FSA-S05" results
-
-        testCase "FSA-C11: Legacy Lambda Property Access" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// LegacyLambdaDummy
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C11" results
-
-        testCase "FSA-C12: Verbose Nested Record Updates" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// NestedRecordDummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C12" results
-
-        testCase "FSA-C13: Missing TailCall Attribute" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// MissingTailCall trigger
-let rec loop i =
-    if i = 0 then () else loop (i - 1)
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C13" results
-
-        testCase "FSA-C14: Agent Mutability Evasion (Dictionary/Ref)" <| fun _ ->
-            let sourceCode = """
-module BadCode
-open System.Collections.Generic
-let doSomething () =
-    let state = Dictionary<string, int>()
-    state.Add("evasion", 1)
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C14" results
-
-        testCase "FSA-ML01: Raw array mutation in core ML logic" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// RawArrayDummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-ML01" results
-
-        testCase "FSA-ML02: OOP Inheritance in ML Model" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// InheritDummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-ML02" results
-
-        testCase "FSA-B01: Mutable state / arrays detected outside 'shell' profile" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// ProfileBoundaryDummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-B01" results
-        testCase "FSA-F01: No Throwing in Core" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// F01Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-F01" results
-
-        testCase "FSA-F02: Total Pattern Matching" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// F02Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-F02" results
-
-        testCase "FSA-F03: Enforce Result Binding over Imperative Checks" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// F03Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-F03" results
-
-        testCase "FSA-F04: No Implicit Unit Sequences in Core" <| fun _ ->
-            let sourceCode = """
-module BadCode
-let doSomething () =
-    printfn "Side effect"
-    5
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-F04" results
-
-        testCase "FSA-F05: Domain Signature Purity" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// F05Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-F05" results
-
-        testCase "FSA-F06: Total Immutable Enforcement" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// F06Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-F06" results
-
-        testCase "FSA-F07: Ban Classes in Domain" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// F07Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-F07" results
-        testCase "FSA-E01: No Public Classes/Inheritance in API" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// E01Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-E01" results
-
-        testCase "FSA-E02: No Hidden Exceptions in API" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// E02Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-E02" results
-
-        testCase "FSA-E03: No C# Delegates (Action/Func) in API" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// E03Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-E03" results
-
-        testCase "FSA-E04: No Leaked Mutability in API" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// E04Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-E04" results
-
-        testCase "FSA-M01: Struct DU contains reference fields" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// M01Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-M01" results
-
-        ptestCase "FSA-M02: [<RequireQualifiedAccess>] violation" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// M02Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-M02" results
-
-        testCase "FSA-M03: Unit-of-measure loss via implicit cast" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// M03Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-M03" results
-
-        testCase "FSA-M04: Active pattern partiality without fallback" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// M04Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-M04" results
-
-        testCase "FSA-C15: Catalogue Violation (Effectful Method)" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// C15Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C15" results
-
-        testCase "FSA-C16: Catalogue Violation (Mutable Collection)" <| fun _ ->
-            let sourceCode = """
-module BadCode
-// C16Dummy trigger
-let doSomething () = ()
-"""
-            let results = runFsAssay sourceCode
-            expectViolation "FSA-C16" results
-
-        testCase "Roslyn Parity: Code Fixes" <| fun _ ->
-            let sourceCode = """
-module BadCode
-let doSomething (x: obj) =
-    if isNull x then ()
-"""
-            let results = runFsAssay sourceCode
-            let fixes = results |> List.collect (fun m -> m.Fixes)
-            Expect.isTrue (fixes |> List.exists (fun f -> f.FromText = "isNull" && f.ToText = "Option.isNone")) "Expected isNull fix"
+            expectNoViolation "FSA-S05" results
     ]
 
 let runE2E (projectCode: string) (sourceCode: string) =

@@ -160,3 +160,10 @@ let toMessage (loc: Located<Rule>) : Message =
     }
     
 
+type Profile =
+    | Core
+    | Shell
+    | Oracle
+    | Api
+    | Test
+    | Script

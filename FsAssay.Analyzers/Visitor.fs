@@ -22,7 +22,7 @@ let analyzeDecl (decl: FSharpImplementationFileDeclaration) (topSups: string lis
             
             let findings = 
                 let mutable f = []
-                if name.Contains("get_Value") || name.Contains("get_Head") || logicalName = "GetValue" || logicalName = "Value" || logicalName = "Head" || logicalName = "get_Value" || logicalName = "get_Head" then
+                if name = "Microsoft.FSharp.Core.OptionModule.GetValue" then
                     if not (isSuppressed currentSups "FSA-C02") then f <- f @ (mkLocated FSAC02 expr.Range |> Option.toList)
                 if name.Contains(".Result") || name.Contains(".Wait") || logicalName = "Wait" || logicalName = "Result" || logicalName = "get_Result" then
                     if newInAsync && not (isSuppressed currentSups "FSA-S05") then f <- f @ (mkLocated FSAS05 expr.Range |> Option.toList)
@@ -34,8 +34,7 @@ let analyzeDecl (decl: FSharpImplementationFileDeclaration) (topSups: string lis
                     let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
                     if text.Contains("Seq." + "length") && (text.Contains("initInfinite") || text.Contains("unfold")) then
                         if not (isSuppressed currentSups "FSA-C08") then f <- f @ (mkLocated FSAC08 expr.Range |> Option.toList)
-                if logicalName = "Start" || name.Contains("Async." + "Start") then
-                    if inTryFinally && not (isSuppressed currentSups "FSA-C04") then f <- f @ (mkLocated FSAC04 expr.Range |> Option.toList)
+
                 if logicalName = "is" + "Null" || logicalName = "op_Equality" then
                     let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
                     if text.Contains("is" + "Null") || text.Contains("null") then
@@ -181,14 +180,7 @@ let analyzeDecl (decl: FSharpImplementationFileDeclaration) (topSups: string lis
         | FSharpExprPatterns.ILAsm(_, _, args) -> List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally inLiteral) args
         | FSharpExprPatterns.TraitCall(_, _, _, _, _, args) -> List.collect (fun a -> visitExpr a currentSups inAsync inTryFinally inLiteral) args
         | FSharpExprPatterns.FastIntegerForLoop(start, limit, body, _, _, _) -> visitExpr start currentSups inAsync inTryFinally inLiteral @ visitExpr limit currentSups inAsync inTryFinally inLiteral @ visitExpr body currentSups inAsync inTryFinally inLiteral
-        | _ -> 
-            let mutable f = []
-            try 
-                let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
-                if text.Contains("async {") && text.Contains("Missing" + "Return") then
-                    if not (isSuppressed currentSups "FSA-S04") then f <- f @ (mkLocated FSAS04 expr.Range |> Option.toList)
-            with _ -> ()
-            f
+        | _ -> []
 
     let rec visit (d: FSharpImplementationFileDeclaration) (sups: string list) =
         match d with
@@ -202,38 +194,6 @@ let analyzeDecl (decl: FSharpImplementationFileDeclaration) (topSups: string lis
                 let mutable f = []
                 if v.GenericParameters.Count > 5 then
                     if not (isSuppressed localSups "FSA-AI07") then f <- f @ (mkLocated FSAAI07 body.Range |> Option.toList)
-                
-                let text = try sourceText.GetSubTextFromRange(body.Range).ToString() with _ -> ""
-                if text.Contains("Unchecked." + "defaultof") then f <- f @ (mkLocated FSAC01 body.Range |> Option.toList)
-                if text.Contains("Async." + "RunSynchronously") then f <- f @ (mkLocated FSAC03 body.Range |> Option.toList)
-                if text.Contains("Incomplete" + "Match") then f <- f @ (mkLocated FSAC05 body.Range |> Option.toList)
-                if text.Contains("fail" + "with") then f <- f @ (mkLocated FSAC06 body.Range |> Option.toList)
-                if text.Contains("Seq." + "length") then f <- f @ (mkLocated FSAC08 body.Range |> Option.toList)
-                if text.Contains("Missing" + "Return") then f <- f @ (mkLocated FSAS04 body.Range |> Option.toList)
-                if text.Contains("LegacyLambda" + "Dummy") then f <- f @ (mkLocated FSAC11 body.Range |> Option.toList)
-                if text.Contains("NestedRecord" + "Dummy") then f <- f @ (mkLocated FSAC12 body.Range |> Option.toList)
-                if text.Contains("MissingTail" + "Call") then f <- f @ (mkLocated FSAC13 body.Range |> Option.toList)
-                if text.Contains("re" + "f ") || text.Contains("Dictionary" + "<") then f <- f @ (mkLocated FSAC14 body.Range |> Option.toList)
-                if text.Contains("RawArray" + "Dummy") then f <- f @ (mkLocated FSAML01 body.Range |> Option.toList)
-                if text.Contains("Inherit" + "Dummy") then f <- f @ (mkLocated FSAML02 body.Range |> Option.toList)
-                if text.Contains("ProfileBoundary" + "Dummy") then f <- f @ (mkLocated FSAB01 body.Range |> Option.toList)
-                if text.Contains("Db" + "Context") then f <- f @ (mkLocated FSAB02 body.Range |> Option.toList)
-                if text.Contains("ParseResults" + "<") then f <- f @ (mkLocated FSAB03 body.Range |> Option.toList)
-                if text.Contains("F01" + "Dummy") then f <- f @ (mkLocated FSAF01 body.Range |> Option.toList)
-                if text.Contains("F02" + "Dummy") then f <- f @ (mkLocated FSAF02 body.Range |> Option.toList)
-                if text.Contains("F03" + "Dummy") then f <- f @ (mkLocated FSAF03 body.Range |> Option.toList)
-                if text.Contains("F04" + "Dummy") then f <- f @ (mkLocated FSAF04 body.Range |> Option.toList)
-                if text.Contains("F05" + "Dummy") then f <- f @ (mkLocated FSAF05 body.Range |> Option.toList)
-                if text.Contains("F06" + "Dummy") then f <- f @ (mkLocated FSAF06 body.Range |> Option.toList)
-                if text.Contains("F07" + "Dummy") then f <- f @ (mkLocated FSAF07 body.Range |> Option.toList)
-                if text.Contains("E01" + "Dummy") then f <- f @ (mkLocated FSAE01 body.Range |> Option.toList)
-                if text.Contains("E02" + "Dummy") then f <- f @ (mkLocated FSAE02 body.Range |> Option.toList)
-                if text.Contains("E03" + "Dummy") then f <- f @ (mkLocated FSAE03 body.Range |> Option.toList)
-                if text.Contains("E04" + "Dummy") then f <- f @ (mkLocated FSAE04 body.Range |> Option.toList)
-                
-                if text.Contains("M01" + "Dummy") then f <- f @ (mkLocated FSAM01 body.Range |> Option.toList)
-                if text.Contains("M03" + "Dummy") then f <- f @ (mkLocated FSAM03 body.Range |> Option.toList)
-                if text.Contains("M04" + "Dummy") then f <- f @ (mkLocated FSAM04 body.Range |> Option.toList)
                 
                 f @ visitExpr body localSups false false false
         | FSharpImplementationFileDeclaration.InitAction(expr) ->

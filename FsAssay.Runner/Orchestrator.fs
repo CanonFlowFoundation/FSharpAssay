@@ -8,11 +8,13 @@ open FSharp.Compiler.CodeAnalysis
 open FSharp.Compiler.Text
 open FSharp.Compiler.Diagnostics
 
+open FsAssay.Analyzers.Domain
+
 module Orchestrator =
     
     let checker = FSharpChecker.Create(keepAssemblyContents = true)
     
-    let evaluateFileWithProfile (options: FSharpProjectOptions) (file: string) (profile: string) = async {
+    let evaluateFileWithProfile (options: FSharpProjectOptions) (file: string) (profile: Profile) = async {
         if not (File.Exists(file)) then return Skipped UnrelatedFile
         else
             let source = File.ReadAllText(file)
@@ -30,7 +32,7 @@ module Orchestrator =
 
                 if not hasErrors && checkResults.HasFullTypeCheckInfo && checkResults.ImplementationFile.IsSome then
                     let context : CliContext = {
-                        FileName = if profile <> "core" && not (file.Contains("PROFILE:")) then sprintf "%s?profile=%s" file profile else file
+                        FileName = file
                         SourceText = sourceText
                         ParseFileResults = parseResults
                         CheckFileResults = checkResults
@@ -41,7 +43,7 @@ module Orchestrator =
                     }
                     
                     try
-                        let! violations = Library.antiPatternAnalyzer context
+                        let! violations = Library.coreAnalyzer context.TypedTree context.FileName context.SourceText profile
                         return Completed violations
                     with e ->
                         return Failed (AnalyzerException e.Message)
@@ -49,11 +51,11 @@ module Orchestrator =
                     return Skipped CompilerErrors
     }
 
-    let evaluateFile options file = evaluateFileWithProfile options file "core"
+    let evaluateFile options file = evaluateFileWithProfile options file Core
 
     [<SuppressMessage("FsAssay", "FSA2017")>]
     [<SuppressMessage("FsAssay", "FSA-C01")>]
-    let evaluateSingleFileWithProfile (file: string) (profile: string) = async {
+    let evaluateSingleFileWithProfile (file: string) (profile: Profile) = async {
         if not (File.Exists(file)) then return Skipped UnrelatedFile
         else
             let source = File.ReadAllText(file)
@@ -77,7 +79,7 @@ module Orchestrator =
                     return Skipped CompilerErrors
                 else
                     let context : CliContext = {
-                        FileName = if profile <> "core" && not (file.Contains("PROFILE:")) then sprintf "%s?profile=%s" file profile else file
+                        FileName = file
                         SourceText = sourceText
                         ParseFileResults = parseResults
                         CheckFileResults = checkResults
@@ -87,10 +89,10 @@ module Orchestrator =
                         AnalyzerIgnoreRanges = Map.empty
                     }
                     try
-                        let! violations = Library.antiPatternAnalyzer context
+                        let! violations = Library.coreAnalyzer context.TypedTree context.FileName context.SourceText profile
                         return Completed violations
                     with e ->
                         return Failed (AnalyzerException e.Message)
     }
 
-    let evaluateSingleFile file = evaluateSingleFileWithProfile file "core"
+    let evaluateSingleFile file = evaluateSingleFileWithProfile file Core
