@@ -130,9 +130,9 @@ let main argv =
 
                     match verdict with
                     | Completed violations ->
+                        totalViolations <- totalViolations + violations.Length
+                        allResults.Add(file, violations)
                         if not (List.isEmpty violations) then
-                            totalViolations <- totalViolations + violations.Length
-                            allResults.Add(file, violations)
                             if not (results.Contains(Adjudicate)) then
                                 printfn "\n❌ %s" file
                                 for v in violations do

@@ -349,9 +349,10 @@ dotnet run --project FsAssay.Tests
 | FSA-M04 | Active pattern partiality without fallback | Proposed |
 | FSA-AI10 | Magic numbers: numeric literals > 1 in non-test code | Implemented |
 | FSA-AI07 | Overly Generic: more than 5 generic parameters in a function/method | Implemented |
+| FSA-AI11 | RequireQualifiedAccess on all DUs and Enums | Implemented |
 
 ## Summary
-- **Implemented**: 16
+- **Implemented**: 17
 - **Delegated**: 2
 - **Proposed**: 25
 - **Dummy**: 0

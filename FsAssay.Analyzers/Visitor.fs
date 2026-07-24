@@ -188,9 +188,11 @@ let analyzeDecl (decl: FSharpImplementationFileDeclaration) (topSups: string lis
             let localSups = extractSuppressions e.Attributes @ sups
             let mutable f = []
             if (e.IsFSharpUnion || e.IsEnum) && not e.IsFSharpExceptionDeclaration then
-                let hasRqa = e.Attributes |> Seq.exists (fun attr -> attr.AttributeType.LogicalName = "RequireQualifiedAccessAttribute")
-                if not hasRqa && not (isSuppressed localSups "FSA-AI11") then
-                    f <- f @ (mkLocated FSAAI11 e.DeclarationLocation |> Option.toList)
+                let isSingleCase = try e.IsFSharpUnion && e.UnionCases.Count = 1 with _ -> false
+                if not isSingleCase then
+                    let hasRqa = e.Attributes |> Seq.exists (fun attr -> attr.AttributeType.LogicalName = "RequireQualifiedAccessAttribute")
+                    if not hasRqa && not (isSuppressed localSups "FSA-AI11") then
+                        f <- f @ (mkLocated FSAAI11 e.DeclarationLocation |> Option.toList)
             f @ (decls |> List.collect (fun child -> visit child localSups))
         | FSharpImplementationFileDeclaration.MemberOrFunctionOrValue(v, args, body) ->
             if v.IsCompilerGenerated then []

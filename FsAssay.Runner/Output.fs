@@ -149,7 +149,46 @@ module Output =
             results
             |> List.map (fun (f, msgs) ->
                 let vHtml = msgs |> List.map (fun m -> sprintf "<div class=\"violation\"><span class=\"code\">[%s]</span> (Line %d) %s</div>" m.Code m.Range.StartLine m.Message) |> String.concat ""
-                sprintf "<h3>%s</h3>%s" f (if String.IsNullOrEmpty vHtml then "<p style='color: #03dac6;'>✓ Clean (Zero Violations)</p>" else vHtml))
+                
+                // MAGIC: Parse CanonflowSource attributes
+                let mutable legacyHtml = ""
+                try
+                    let codeLines = File.ReadAllLines(f)
+                    let regex = System.Text.RegularExpressions.Regex(@"\[<CanonflowSource\(""(.*?)"",\s*""(.*?)""\)>\]")
+                    for line in codeLines do
+                        let m = regex.Match(line)
+                        if m.Success then
+                            let sqlFile = m.Groups.[1].Value
+                            let targetTable = m.Groups.[2].Value
+                            // Resolve the path relative to the scanned project
+                            let projDir = Path.GetDirectoryName(f)
+                            let absoluteSqlFile = Path.GetFullPath(Path.Combine(projDir, "..", "..", "..", sqlFile))
+                            if File.Exists(absoluteSqlFile) then
+                                let sqlLines = File.ReadAllLines(absoluteSqlFile)
+                                // Super simple extraction: find CREATE TABLE targetTable and read until ';'
+                                let mutable inTable = false
+                                let mutable tableSql = []
+                                for sLine in sqlLines do
+                                    if sLine.ToLower().Contains("create table " + targetTable) then inTable <- true
+                                    if inTable then tableSql <- tableSql @ [sLine]
+                                    if inTable && sLine.Contains(";") then inTable <- false
+                                
+                                let formattedSql = String.concat "\n" tableSql
+                                legacyHtml <- legacyHtml + sprintf """
+                                    <div class="diff-container">
+                                        <div class="diff-pane old-code">
+                                            <h4>Legacy DB Noun (SQL)</h4>
+                                            <pre><code>%s</code></pre>
+                                        </div>
+                                        <div class="diff-pane new-code">
+                                            <h4>Uplifted Domain Verb (F#)</h4>
+                                            <pre><code>%s</code></pre>
+                                        </div>
+                                    </div>
+                                """ formattedSql line
+                with e -> legacyHtml <- "<!-- Error parsing sources: " + e.Message + " -->"
+
+                sprintf "<h3>%s</h3>%s%s" f legacyHtml (if String.IsNullOrEmpty vHtml then "<p style='color: #03dac6;'>✓ Clean (Zero Violations)</p>" else vHtml))
             |> String.concat ""
 
         let html = 
@@ -160,6 +199,11 @@ module Output =
             ".card { background: #1e1e1e; margin-top: 20px; padding: 20px; border-radius: 12px; }\n" +
             ".violation { border-left: 4px solid #cf6679; padding-left: 12px; margin: 12px 0; }\n" +
             ".code { font-family: monospace; color: #03dac6; }\n" +
+            ".diff-container { display: flex; gap: 20px; margin-top: 20px; }\n" +
+            ".diff-pane { flex: 1; background: #2d2d2d; padding: 15px; border-radius: 8px; border: 1px solid #444; }\n" +
+            ".diff-pane h4 { margin-top: 0; color: #bb86fc; }\n" +
+            ".old-code pre { color: #ff7b72; }\n" +
+            ".new-code pre { color: #a5d6ff; }\n" +
             "</style>\n</head>\n<body>\n" +
             "<div class=\"header\">\n<div>\n<h1>FsAssay Quality Dashboard</h1>\n" +
             sprintf "<p>Score: <strong>%d / 100</strong> | Total Anti-Patterns: <strong>%d</strong></p>\n</div>\n" score totalViolations +
