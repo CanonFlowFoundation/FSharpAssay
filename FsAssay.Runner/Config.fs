@@ -18,15 +18,23 @@ module Config =
         profile = "core"
     }
 
+    let rec findConfig (dirPath: string) =
+        let configPath = Path.Combine(dirPath, ".fsassayrc")
+        if File.Exists(configPath) then Some configPath
+        else
+            let parent = Directory.GetParent(dirPath)
+            if parent <> null then findConfig parent.FullName
+            else None
+
     let loadConfig (targetPath: string) =
         let dirPath = if Directory.Exists(targetPath) then targetPath else Path.GetDirectoryName(targetPath)
-        let configPath = Path.Combine(dirPath, ".fsassayrc")
-        if File.Exists(configPath) then
+        match findConfig dirPath with
+        | Some configPath ->
             try
                 let json = File.ReadAllText(configPath)
                 let opts = JsonSerializerOptions(PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
                 let loaded = JsonSerializer.Deserialize<PolicyConfig>(json, opts)
                 Option.ofObj loaded |> Option.defaultValue defaultConfig
             with _ -> defaultConfig
-        else defaultConfig
+        | None -> defaultConfig
 

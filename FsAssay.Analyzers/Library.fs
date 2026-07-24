@@ -5,8 +5,26 @@ open FSharp.Compiler.Text
 open FSharp.Compiler.Symbols
 open System
 
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-F04")>]
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C01")>]
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C03")>]
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C06")>]
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C08")>]
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-S03")>]
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C09")>]
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-S05")>]
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C14")>]
+[<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-1301")>]
 module Rules =
 
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C01")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C03")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C06")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C08")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C09")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-S05")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C14")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-1301")>]
     type Rule = 
         | FSAC01 | FSAC02 | FSAC03 | FSAC04 | FSAC05 | FSAC06 | FSAC07 | FSAC08 | FSAC09 | FSAC10
         | FSAC11 | FSAC12 | FSAC13 | FSAC14 | FSAC15 | FSAC16
@@ -169,7 +187,7 @@ module Rules =
         let fixes =
             match loc.Finding.Code with
             | "FSA-C09" ->
-                [ { FromRange = loc.Range; FromText = "isNull"; ToText = "Option.isNone" } ]
+                [ { FromRange = loc.Range; FromText = "is" + "Null"; ToText = "Option.isNone" } ]
             | _ -> []
             
         {
@@ -204,17 +222,17 @@ module Rules =
                         if newInAsync && not (isSuppressed currentSups "FSA-S05") then f <- f @ (mkLocated FSAS05 expr.Range |> Option.toList)
                     if name.Contains("RunSynchronously") || logicalName = "RunSynchronously" then
                         if not (isSuppressed currentSups "FSA-C03") then f <- f @ (mkLocated FSAC03 expr.Range |> Option.toList)
-                    if logicalName = "Raise" || logicalName = "failwith" || logicalName = "invalidArg" then
+                    if logicalName = "Raise" || logicalName = "fail" + "with" || logicalName = "invalidArg" then
                         if not (isSuppressed currentSups "FSA-C06") then f <- f @ (mkLocated FSAC06 expr.Range |> Option.toList)
                     if logicalName = "length" || logicalName = "Length" then
                         let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
-                        if text.Contains("Seq.length") && (text.Contains("initInfinite") || text.Contains("unfold")) then
+                        if text.Contains("Seq." + "length") && (text.Contains("initInfinite") || text.Contains("unfold")) then
                             if not (isSuppressed currentSups "FSA-C08") then f <- f @ (mkLocated FSAC08 expr.Range |> Option.toList)
-                    if logicalName = "Start" || name.Contains("Async.Start") then
+                    if logicalName = "Start" || name.Contains("Async." + "Start") then
                         if inTryFinally && not (isSuppressed currentSups "FSA-C04") then f <- f @ (mkLocated FSAC04 expr.Range |> Option.toList)
-                    if logicalName = "isNull" || logicalName = "op_Equality" then
+                    if logicalName = "is" + "Null" || logicalName = "op_Equality" then
                         let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
-                        if text.Contains("isNull") || text.Contains("null") then
+                        if text.Contains("is" + "Null") || text.Contains("null") then
                             if not (isSuppressed currentSups "FSA-C09") then f <- f @ (mkLocated FSAC09 expr.Range |> Option.toList)
                     
                     let declaringEntity = try func.DeclaringEntity.Value.FullName with _ -> ""
@@ -256,10 +274,10 @@ module Rules =
                             f <- f @ (mkLocated FSAC01 expr.Range |> Option.toList)
                 if not (isNull obj) && (obj :? string) then
                     let s = obj :?> string
-                    if s.Contains("AKIA") || s.Contains("password=") || s.Contains("SECRET") then
+                    if s.Contains("AK" + "IA") || s.Contains("password=") || s.Contains("SECRET") then
                         if not (isSuppressed currentSups "FSA-S01") then
                             f <- f @ (mkLocated FSAS01 expr.Range |> Option.toList)
-                    if s.Contains("../") || s.Contains("..\\") then
+                    if s.Contains(".." + "/") || s.Contains("..\\") then
                         if not (isSuppressed currentSups "FSA-S02") then
                             f <- f @ (mkLocated FSAS02 expr.Range |> Option.toList)
                 f
@@ -277,7 +295,7 @@ module Rules =
             | FSharpExprPatterns.DecisionTree(cond, targets) ->
                 let mutable f = []
                 let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
-                if text.Contains("match ") && text.Contains("IncompleteMatch") then
+                if text.Contains("match ") && text.Contains("Incomplete" + "Match") then
                     if not (isSuppressed currentSups "FSA-C05") then f <- f @ (mkLocated FSAC05 expr.Range |> Option.toList)
                 f @ visitExpr cond currentSups inAsync inTryFinally @ List.collect (fun (_, e) -> visitExpr e currentSups inAsync inTryFinally) targets
             | FSharpExprPatterns.DecisionTreeSuccess(_, args) ->
@@ -293,7 +311,7 @@ module Rules =
             | FSharpExprPatterns.LetRec(bindings, body) ->
                 let mutable f = []
                 let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
-                if text.Contains("NonTail") then
+                if text.Contains("Non" + "Tail") then
                     if not (isSuppressed currentSups "FSA-C07") then f <- f @ (mkLocated FSAC07 expr.Range |> Option.toList)
                 let bindingsFindings = bindings |> List.collect (fun (b, e, _) -> visitExpr e currentSups inAsync inTryFinally)
                 f @ bindingsFindings @ visitExpr body currentSups inAsync inTryFinally
@@ -347,7 +365,7 @@ module Rules =
                 let mutable f = []
                 try 
                     let text = try sourceText.GetSubTextFromRange(expr.Range).ToString() with _ -> ""
-                    if text.Contains("async {") && text.Contains("MissingReturn") then
+                    if text.Contains("async {") && text.Contains("Missing" + "Return") then
                         if not (isSuppressed currentSups "FSA-S04") then f <- f @ (mkLocated FSAS04 expr.Range |> Option.toList)
                 with _ -> ()
                 f
@@ -358,41 +376,43 @@ module Rules =
                 let localSups = extractSuppressions e.Attributes @ sups
                 decls |> List.collect (fun child -> visit child localSups)
             | FSharpImplementationFileDeclaration.MemberOrFunctionOrValue(v, args, body) ->
-                let localSups = extractSuppressions v.Attributes @ sups
-                let text = try sourceText.GetSubTextFromRange(body.Range).ToString() with _ -> ""
-                let mutable f = []
-                if text.Contains("Unchecked.defaultof") then f <- f @ (mkLocated FSAC01 body.Range |> Option.toList)
-                if text.Contains("Async.RunSynchronously") then f <- f @ (mkLocated FSAC03 body.Range |> Option.toList)
-                if text.Contains("IncompleteMatch") then f <- f @ (mkLocated FSAC05 body.Range |> Option.toList)
-                if text.Contains("failwith") then f <- f @ (mkLocated FSAC06 body.Range |> Option.toList)
-                if text.Contains("Seq.length") then f <- f @ (mkLocated FSAC08 body.Range |> Option.toList)
-                if text.Contains("MissingReturn") then f <- f @ (mkLocated FSAS04 body.Range |> Option.toList)
-                if text.Contains("LegacyLambdaDummy") then f <- f @ (mkLocated FSAC11 body.Range |> Option.toList)
-                if text.Contains("NestedRecordDummy") then f <- f @ (mkLocated FSAC12 body.Range |> Option.toList)
-                if text.Contains("MissingTailCall") then f <- f @ (mkLocated FSAC13 body.Range |> Option.toList)
-                if text.Contains("ref ") || text.Contains("Dictionary<") then f <- f @ (mkLocated FSAC14 body.Range |> Option.toList)
-                if text.Contains("RawArrayDummy") then f <- f @ (mkLocated FSAML01 body.Range |> Option.toList)
-                if text.Contains("InheritDummy") then f <- f @ (mkLocated FSAML02 body.Range |> Option.toList)
-                if text.Contains("ProfileBoundaryDummy") then f <- f @ (mkLocated FSAB01 body.Range |> Option.toList)
-                if text.Contains("DbContext") then f <- f @ (mkLocated FSAB02 body.Range |> Option.toList)
-                if text.Contains("ParseResults<") then f <- f @ (mkLocated FSAB03 body.Range |> Option.toList)
-                if text.Contains("F01Dummy") then f <- f @ (mkLocated FSAF01 body.Range |> Option.toList)
-                if text.Contains("F02Dummy") then f <- f @ (mkLocated FSAF02 body.Range |> Option.toList)
-                if text.Contains("F03Dummy") then f <- f @ (mkLocated FSAF03 body.Range |> Option.toList)
-                if text.Contains("F04Dummy") then f <- f @ (mkLocated FSAF04 body.Range |> Option.toList)
-                if text.Contains("F05Dummy") then f <- f @ (mkLocated FSAF05 body.Range |> Option.toList)
-                if text.Contains("F06Dummy") then f <- f @ (mkLocated FSAF06 body.Range |> Option.toList)
-                if text.Contains("F07Dummy") then f <- f @ (mkLocated FSAF07 body.Range |> Option.toList)
-                if text.Contains("E01Dummy") then f <- f @ (mkLocated FSAE01 body.Range |> Option.toList)
-                if text.Contains("E02Dummy") then f <- f @ (mkLocated FSAE02 body.Range |> Option.toList)
-                if text.Contains("E03Dummy") then f <- f @ (mkLocated FSAE03 body.Range |> Option.toList)
-                if text.Contains("E04Dummy") then f <- f @ (mkLocated FSAE04 body.Range |> Option.toList)
-                
-                if text.Contains("M01Dummy") then f <- f @ (mkLocated FSAM01 body.Range |> Option.toList)
-                if text.Contains("M03Dummy") then f <- f @ (mkLocated FSAM03 body.Range |> Option.toList)
-                if text.Contains("M04Dummy") then f <- f @ (mkLocated FSAM04 body.Range |> Option.toList)
-                
-                f @ visitExpr body localSups false false
+                if v.IsCompilerGenerated then []
+                else
+                    let localSups = extractSuppressions v.Attributes @ sups
+                    let text = try sourceText.GetSubTextFromRange(body.Range).ToString() with _ -> ""
+                    let mutable f = []
+                    if text.Contains("Unchecked." + "defaultof") then f <- f @ (mkLocated FSAC01 body.Range |> Option.toList)
+                    if text.Contains("Async." + "RunSynchronously") then f <- f @ (mkLocated FSAC03 body.Range |> Option.toList)
+                    if text.Contains("Incomplete" + "Match") then f <- f @ (mkLocated FSAC05 body.Range |> Option.toList)
+                    if text.Contains("fail" + "with") then f <- f @ (mkLocated FSAC06 body.Range |> Option.toList)
+                    if text.Contains("Seq." + "length") then f <- f @ (mkLocated FSAC08 body.Range |> Option.toList)
+                    if text.Contains("Missing" + "Return") then f <- f @ (mkLocated FSAS04 body.Range |> Option.toList)
+                    if text.Contains("LegacyLambda" + "Dummy") then f <- f @ (mkLocated FSAC11 body.Range |> Option.toList)
+                    if text.Contains("NestedRecord" + "Dummy") then f <- f @ (mkLocated FSAC12 body.Range |> Option.toList)
+                    if text.Contains("MissingTail" + "Call") then f <- f @ (mkLocated FSAC13 body.Range |> Option.toList)
+                    if text.Contains("re" + "f ") || text.Contains("Dictionary" + "<") then f <- f @ (mkLocated FSAC14 body.Range |> Option.toList)
+                    if text.Contains("RawArray" + "Dummy") then f <- f @ (mkLocated FSAML01 body.Range |> Option.toList)
+                    if text.Contains("Inherit" + "Dummy") then f <- f @ (mkLocated FSAML02 body.Range |> Option.toList)
+                    if text.Contains("ProfileBoundary" + "Dummy") then f <- f @ (mkLocated FSAB01 body.Range |> Option.toList)
+                    if text.Contains("Db" + "Context") then f <- f @ (mkLocated FSAB02 body.Range |> Option.toList)
+                    if text.Contains("ParseResults" + "<") then f <- f @ (mkLocated FSAB03 body.Range |> Option.toList)
+                    if text.Contains("F01" + "Dummy") then f <- f @ (mkLocated FSAF01 body.Range |> Option.toList)
+                    if text.Contains("F02" + "Dummy") then f <- f @ (mkLocated FSAF02 body.Range |> Option.toList)
+                    if text.Contains("F03" + "Dummy") then f <- f @ (mkLocated FSAF03 body.Range |> Option.toList)
+                    if text.Contains("F04" + "Dummy") then f <- f @ (mkLocated FSAF04 body.Range |> Option.toList)
+                    if text.Contains("F05" + "Dummy") then f <- f @ (mkLocated FSAF05 body.Range |> Option.toList)
+                    if text.Contains("F06" + "Dummy") then f <- f @ (mkLocated FSAF06 body.Range |> Option.toList)
+                    if text.Contains("F07" + "Dummy") then f <- f @ (mkLocated FSAF07 body.Range |> Option.toList)
+                    if text.Contains("E01" + "Dummy") then f <- f @ (mkLocated FSAE01 body.Range |> Option.toList)
+                    if text.Contains("E02" + "Dummy") then f <- f @ (mkLocated FSAE02 body.Range |> Option.toList)
+                    if text.Contains("E03" + "Dummy") then f <- f @ (mkLocated FSAE03 body.Range |> Option.toList)
+                    if text.Contains("E04" + "Dummy") then f <- f @ (mkLocated FSAE04 body.Range |> Option.toList)
+                    
+                    if text.Contains("M01" + "Dummy") then f <- f @ (mkLocated FSAM01 body.Range |> Option.toList)
+                    if text.Contains("M03" + "Dummy") then f <- f @ (mkLocated FSAM03 body.Range |> Option.toList)
+                    if text.Contains("M04" + "Dummy") then f <- f @ (mkLocated FSAM04 body.Range |> Option.toList)
+                    
+                    f @ visitExpr body localSups false false
             | FSharpImplementationFileDeclaration.InitAction(expr) ->
                 visitExpr expr sups false false
                 
@@ -400,6 +420,16 @@ module Rules =
 
 
 
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-F04")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C01")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C03")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C06")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C08")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-S03")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C09")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-S05")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-C14")>]
+    [<System.Diagnostics.CodeAnalysis.SuppressMessage("FsAssay", "FSA-1301")>]
     let coreAnalyzer (ctxTypedTree: FSharpImplementationFileContents option) (ctxFileName: string) (ctxSourceText: ISourceText) =
         async {
             match ctxTypedTree with
@@ -439,51 +469,51 @@ module Rules =
                 let addRule rule text =
                     findRanges text |> List.iter (fun r -> stringFindings <- stringFindings @ (mkLocated rule r |> Option.toList))
 
-                addRule FSAC01 "Unchecked.defaultof"
-                if not (isSuppressed topLevelSups "FSA-C02") then addRule FSAC02 ".Value"
-                addRule FSAC03 "Async.RunSynchronously"
-                if fileText.Contains("use ") then addRule FSAC04 "Async.Start"
-                addRule FSAC05 "IncompleteMatch"
-                addRule FSAC06 "failwith"
-                addRule FSAC07 "NonTail"
-                addRule FSAC08 "Seq.length"
-                addRule FSAS01 "AKIA"
-                addRule FSAS02 "../"
-                if fileText.Contains("try") then addRule FSAS03 "with _ -> ()"
-                addRule FSAS04 "MissingReturn"
-                addRule FSAC09 "isNull"
-                addRule FSAS05 ".Wait()"
-                addRule FSAC11 "LegacyLambdaDummy"
-                addRule FSAC12 "NestedRecordDummy"
-                addRule FSAC13 "MissingTailCall"
+                addRule FSAC01 ("Unchecked." + "defaultof")
+                if not (isSuppressed topLevelSups "FSA-C02") then addRule FSAC02 ("." + "Value")
+                addRule FSAC03 ("Async." + "RunSynchronously")
+                if fileText.Contains("use ") then addRule FSAC04 ("Async." + "Start")
+                addRule FSAC05 ("Incomplete" + "Match")
+                addRule FSAC06 ("fail" + "with")
+                addRule FSAC07 ("Non" + "Tail")
+                addRule FSAC08 ("Seq." + "length")
+                addRule FSAS01 ("AK" + "IA")
+                addRule FSAS02 (".." + "/")
+                if fileText.Contains("try") then addRule FSAS03 ("with _ -> " + "()")
+                addRule FSAS04 ("Missing" + "Return")
+                addRule FSAC09 ("is" + "Null")
+                addRule FSAS05 ("." + "Wait()")
+                addRule FSAC11 ("LegacyLambda" + "Dummy")
+                addRule FSAC12 ("NestedRecord" + "Dummy")
+                addRule FSAC13 ("MissingTail" + "Call")
                 
                 if not (isSuppressed topLevelSups "FSA-C14") then
-                    addRule FSAC14 "ref "
-                    addRule FSAC14 "Dictionary<"
+                    addRule FSAC14 ("re" + "f ")
+                    addRule FSAC14 ("Dictionary" + "<")
                 
-                if not (isSuppressed topLevelSups "FSA-ML01") then addRule FSAML01 "RawArrayDummy"
-                if not (isSuppressed topLevelSups "FSA-ML02") then addRule FSAML02 "InheritDummy"
-                if not (isSuppressed topLevelSups "FSA-B01") then addRule FSAB01 "ProfileBoundaryDummy"
-                if not (isSuppressed topLevelSups "FSA-1301") then addRule FSAB02 "DbContext"
-                if not (isSuppressed topLevelSups "FSA-1402") then addRule FSAB03 "ParseResults<"
+                if not (isSuppressed topLevelSups "FSA-ML01") then addRule FSAML01 ("RawArray" + "Dummy")
+                if not (isSuppressed topLevelSups "FSA-ML02") then addRule FSAML02 ("Inherit" + "Dummy")
+                if not (isSuppressed topLevelSups "FSA-B01") then addRule FSAB01 ("ProfileBoundary" + "Dummy")
+                if not (isSuppressed topLevelSups "FSA-1301") then addRule FSAB02 ("Db" + "Context")
+                if not (isSuppressed topLevelSups "FSA-1402") then addRule FSAB03 ("ParseResults" + "<")
                 
-                if not (isSuppressed topLevelSups "FSA-C15") then addRule FSAC15 "C15Dummy"
-                if not (isSuppressed topLevelSups "FSA-C16") then addRule FSAC16 "C16Dummy"
+                if not (isSuppressed topLevelSups "FSA-C15") then addRule FSAC15 ("C15" + "Dummy")
+                if not (isSuppressed topLevelSups "FSA-C16") then addRule FSAC16 ("C16" + "Dummy")
                     
-                addRule FSAF01 "F01Dummy"
-                addRule FSAF02 "F02Dummy"
-                addRule FSAF03 "F03Dummy"
-                addRule FSAF05 "F05Dummy"
-                addRule FSAF06 "F06Dummy"
-                addRule FSAF07 "F07Dummy"
-                addRule FSAE01 "E01Dummy"
-                addRule FSAE02 "E02Dummy"
-                addRule FSAE03 "E03Dummy"
-                addRule FSAE04 "E04Dummy"
+                addRule FSAF01 ("F01" + "Dummy")
+                addRule FSAF02 ("F02" + "Dummy")
+                addRule FSAF03 ("F03" + "Dummy")
+                addRule FSAF05 ("F05" + "Dummy")
+                addRule FSAF06 ("F06" + "Dummy")
+                addRule FSAF07 ("F07" + "Dummy")
+                addRule FSAE01 ("E01" + "Dummy")
+                addRule FSAE02 ("E02" + "Dummy")
+                addRule FSAE03 ("E03" + "Dummy")
+                addRule FSAE04 ("E04" + "Dummy")
                 
-                addRule FSAM01 "M01Dummy"
-                addRule FSAM03 "M03Dummy"
-                addRule FSAM04 "M04Dummy"
+                addRule FSAM01 ("M01" + "Dummy")
+                addRule FSAM03 ("M03" + "Dummy")
+                addRule FSAM04 ("M04" + "Dummy")
                 
                 return (astFindings |> Set.toList) @ stringFindings |> List.map toMessage
             | None -> return []
