@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="M10ProjectLoadingTests.fs" />
     <Compile Include="ObligationPluginTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
