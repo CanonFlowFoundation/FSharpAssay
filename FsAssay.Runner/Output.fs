@@ -21,28 +21,83 @@ module Output =
         violations: JsonViolation[]
     }
 
-    let writeCanonicalJson (results: (string * Violation list) list) (outPath: string) =
-        let jsonResults =
-            results
-            |> List.map (fun (file, violations) ->
-                {
-                    file = file
-                    violations = 
-                        violations |> List.map (fun v ->
-                            {
-                                code = v.Code
-                                message = v.Message
-                                startLine = v.Range.StartLine
-                                startColumn = v.Range.StartColumn
-                                endLine = v.Range.EndLine
-                                endColumn = v.Range.EndColumn
-                            }
-                        ) |> List.toArray
-                }
-            )
+    type JsonProjectEvidence = {
+        path: string
+        status: string
+        reason: string
+        targetFrameworks: string[]
+        sourceFileCount: int
+    }
+
+    type JsonEvidenceReceipt = {
+        schemaVersion: string
+        outcome: string
+        authoritative: bool
+        policyAvailable: bool
+        projectsDiscovered: int
+        projectsLoaded: int
+        projectsUnsupported: int
+        projectsLoadFailed: int
+        projects: JsonProjectEvidence[]
+        compilerIncompleteFiles: string[]
+        findings: JsonFileResult[]
+    }
+
+    let private dispositionText disposition =
+        match disposition with
+        | ProjectSystem.Loaded -> "loaded"
+        | ProjectSystem.Unsupported -> "unsupported"
+        | ProjectSystem.LoadFailed -> "load-failed"
+
+    let private jsonFindings (results: (string * Violation list) list) =
+        results
+        |> List.map (fun (file, violations) ->
+            { file = file
+              violations = violations |> List.map (fun v ->
+                { code = v.Code
+                  message = v.Message
+                  startLine = v.Range.StartLine
+                  startColumn = v.Range.StartColumn
+                  endLine = v.Range.EndLine
+                  endColumn = v.Range.EndColumn }) |> List.toArray })
+        |> List.toArray
+
+    let writeEvidenceJson
+        (evidence: ProjectSystem.ProjectLoadEvidence)
+        (compilerIncompleteFiles: string list)
+        (results: (string * Violation list) list)
+        (outcome: string)
+        (authoritative: bool)
+        (policyAvailable: bool)
+        (outPath: string) =
+        let projects =
+            evidence.projects
+            |> List.sortBy (fun project -> project.path)
+            |> List.map (fun project ->
+                { path = project.path
+                  status = dispositionText project.disposition
+                  reason = project.reason
+                  targetFrameworks = project.targetFrameworks |> List.toArray
+                  sourceFileCount = project.sourceFileCount })
             |> List.toArray
+        let receipt =
+            { schemaVersion = "1.0.0"
+              outcome = outcome
+              authoritative = authoritative
+              policyAvailable = policyAvailable
+              projectsDiscovered = evidence.projects.Length
+              projectsLoaded = evidence.projects |> List.filter (fun project -> project.disposition = ProjectSystem.Loaded) |> List.length
+              projectsUnsupported = evidence.projects |> List.filter (fun project -> project.disposition = ProjectSystem.Unsupported) |> List.length
+              projectsLoadFailed = evidence.projects |> List.filter (fun project -> project.disposition = ProjectSystem.LoadFailed) |> List.length
+              projects = projects
+              compilerIncompleteFiles = compilerIncompleteFiles |> List.sort |> List.toArray
+              findings = jsonFindings results }
+        let options = JsonSerializerOptions(WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
+        File.WriteAllText(outPath, JsonSerializer.Serialize(receipt, options)) // EXPECT: FSA2022 // EXPECT: FSA-C15
+
+    let writeCanonicalJson (results: (string * Violation list) list) (outPath: string) =
         let options = JsonSerializerOptions(WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase) // EXPECT: FSA-F04
-        let jsonStr = JsonSerializer.Serialize(jsonResults, options)
+        let jsonStr = JsonSerializer.Serialize(jsonFindings results, options)
         File.WriteAllText(outPath, jsonStr) // EXPECT: FSA2022 // EXPECT: FSA-C15
 
     // Minimal SARIF generation using anonymous records

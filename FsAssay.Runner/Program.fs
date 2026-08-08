@@ -98,6 +98,8 @@ let main argv =
         | _ -> FsAssay.Analyzers.Domain.Profile.Core
 
     let explicitFiles = results.TryGetResult(Files)
+    let mutable projectEvidence : ProjectSystem.ProjectLoadEvidence = { options = []; projects = [] }
+    let compilerIncompleteFiles = ResizeArray<string>()
 
     let executeScan () =
         let optionsList =
@@ -105,11 +107,12 @@ let main argv =
             | Some _ -> []
             | None ->
                 try
-                    ProjectSystem.getTargetProjects path
+                    projectEvidence <- ProjectSystem.loadWithEvidence path
+                    projectEvidence.options
                 with e ->
                     printfn "💥 Project System Failure: %s" e.Message // EXPECT: FSA-F04
-                    Environment.Exit(ExitCodes.ToolFailure) // EXPECT: FSA-F04
-                    failwith "unreachable" // EXPECT: FSA-C06
+                    projectEvidence <- { options = []; projects = [] }
+                    []
                 
         let hasProjFiles = 
             path.EndsWith(".sln") || path.EndsWith(".slnx") || path.EndsWith(".fsproj") ||
@@ -120,23 +123,22 @@ let main argv =
             elif List.isEmpty optionsList then
                 if hasProjFiles then // EXPECT: FSA-F04
                     printfn "💥 Project System Failure: F# project files were found but failed to load or contained no source files." // EXPECT: FSA-F04
-                    Environment.Exit(ExitCodes.ToolFailure) // EXPECT: FSA-F04
-                    failwith "unreachable" // EXPECT: FSA-C06
-
-                if File.Exists(path) && path.EndsWith(".fs") then [ (path, None) ] // EXPECT: FSA2022
-                elif Directory.Exists(path) then // EXPECT: FSA2022
-                    Directory.GetFiles(path, "*.fs", SearchOption.AllDirectories) // EXPECT: FSA2022
-                    |> Array.filter (fun f -> not (f.Contains("obj") || f.Contains("bin")))
-                    |> Array.map (fun f -> (f, None))
-                    |> Array.toList
-                else []
+                    []
+                else
+                    if File.Exists(path) && path.EndsWith(".fs") then [ (path, None) ] // EXPECT: FSA2022
+                    elif Directory.Exists(path) then // EXPECT: FSA2022
+                        Directory.GetFiles(path, "*.fs", SearchOption.AllDirectories) // EXPECT: FSA2022
+                        |> Array.filter (fun f -> not (f.Contains("obj") || f.Contains("bin")))
+                        |> Array.map (fun f -> (f, None))
+                        |> Array.toList
+                    else []
             else
                 let files = optionsList |> List.collect (fun opts -> opts.SourceFiles |> Array.map (fun f -> (f, Some opts)) |> Array.toList)
                 if List.isEmpty files && hasProjFiles then // EXPECT: FSA-F04
                     printfn "💥 Project System Failure: F# project files were found but contained no source files." // EXPECT: FSA-F04
-                    Environment.Exit(ExitCodes.ToolFailure) // EXPECT: FSA-F04
-                    failwith "unreachable" // EXPECT: FSA-C06
-                files
+                    []
+                elif List.isEmpty files then []
+                else files
 
         let filesToScan =
             match explicitFiles with
@@ -215,6 +217,9 @@ let main argv =
                                 printfn "   ✨ Auto-fix is disabled in this sprint."
                     | Skipped reason ->
                         skippedFiles <- skippedFiles + 1 // EXPECT: FSA-C10
+                        match reason with
+                        | CompilerErrors -> compilerIncompleteFiles.Add(file)
+                        | _ -> ()
                     | Failed fail ->
                         failedFiles <- failedFiles + 1 // EXPECT: FSA-F04 // EXPECT: FSA-C10
                         printfn "\n❌ %s (Failed to analyze: %A)" file fail
@@ -238,6 +243,23 @@ let main argv =
             (totalFiles, skippedFiles, failedFiles + pluginLoadFailures.Length, totalViolations, List.ofSeq allResults, filesToScan |> List.map fst)
 
     let (totalFiles, skippedFiles, failedFiles, totalViolations, allResults, scannedFiles) = executeScan ()
+
+    let projectEvidenceIncomplete =
+        explicitFiles.IsNone &&
+        (List.isEmpty projectEvidence.projects ||
+         projectEvidence.projects |> List.exists (fun project -> project.disposition <> ProjectSystem.Loaded))
+    let projectLoadFailure =
+        explicitFiles.IsNone &&
+        projectEvidence.projects |> List.exists (fun project -> project.disposition = ProjectSystem.LoadFailed)
+    // A policy is never inferred from the repository. Without a reviewed policy,
+    // receipts are observations and cannot be authoritative.
+    let policyAvailable = false
+    let outcome =
+        if failedFiles > 0 || projectLoadFailure then "ToolFailure"
+        elif skippedFiles > 0 || projectEvidenceIncomplete then "Inconclusive"
+        elif totalViolations > 0 then "Fail"
+        else "Pass"
+    let authoritative = outcome = "Pass" && policyAvailable
 
     if results.Contains(Adjudicate) then // EXPECT: FSA-F04
         printfn "\n--- Adjudication Mode ---" // EXPECT: FSA-F04
@@ -308,7 +330,7 @@ let main argv =
 
     match results.TryGetResult(Out_Json) with // EXPECT: FSA-F04
     | Some outPath ->
-        Output.writeCanonicalJson allResults outPath // EXPECT: FSA-F04
+        Output.writeEvidenceJson projectEvidence (List.ofSeq compilerIncompleteFiles) allResults outcome authoritative policyAvailable outPath // EXPECT: FSA-F04
         printfn "Wrote JSON output to %s" outPath
     | None -> ()
 
@@ -388,7 +410,10 @@ let main argv =
         |> Seq.collect snd
         |> Seq.map contributes
         |> Seq.fold maxVerdict FsAssay.Runner.Pass
-        |> fun v -> if failedFiles > 0 || not pluginLoadFailures.IsEmpty then maxVerdict v FsAssay.Runner.ToolFailure elif skippedFiles > 0 then maxVerdict v FsAssay.Runner.Inconclusive else v
+        |> fun v ->
+            if failedFiles > 0 || not pluginLoadFailures.IsEmpty || projectLoadFailure then maxVerdict v FsAssay.Runner.ToolFailure
+            elif skippedFiles > 0 || projectEvidenceIncomplete then maxVerdict v FsAssay.Runner.Inconclusive
+            else v
 
     if results.Contains(Adjudicate) then ExitCodes.Success
     else

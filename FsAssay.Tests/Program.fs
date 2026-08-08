@@ -603,4 +603,4 @@ let getNull () =
 
 [<EntryPoint>]
 let main argv =
-    runTestsWithCLIArgs [] argv (testList "All Tests" [tests; ObligationPluginTests.tests; e2eTests; perfAndCompTests; aiEcosystemTests; negativeTests])
+    runTestsWithCLIArgs [] argv (testList "All Tests" [tests; M10ProjectLoadingTests.tests; ObligationPluginTests.tests; e2eTests; perfAndCompTests; aiEcosystemTests; negativeTests])
